@@ -1,8 +1,8 @@
-package com.example.demo.domain.user.service;
+package com.sgtx.domain.user.service;
 
-import com.example.demo.domain.user.entity.UserEntity;
-import com.example.demo.domain.user.dto.PublicKeyResponse;
-import com.example.demo.domain.user.repository.UserRepository;
+import com.sgtx.domain.user.dto.PublicKeyResponse;
+import com.sgtx.domain.user.entity.UserEntity;
+import com.sgtx.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

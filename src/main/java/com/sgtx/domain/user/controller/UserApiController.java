@@ -1,7 +1,7 @@
-package com.example.demo.domain.user.controller;
+package com.sgtx.domain.user.controller;
 
-import com.example.demo.domain.user.dto.PublicKeyResponse;
-import com.example.demo.domain.user.service.UserService;
+import com.sgtx.domain.user.dto.PublicKeyResponse;
+import com.sgtx.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

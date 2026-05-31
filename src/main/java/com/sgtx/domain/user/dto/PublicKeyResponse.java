@@ -1,4 +1,4 @@
-package com.example.demo.domain.trade.dto;
+package com.sgtx.domain.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -9,9 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TradeCreateResponse {
+public class PublicKeyResponse {
 
-    private Long tradeId;
-    private String status;
-    private String message;
+    private String publicKey;
 }

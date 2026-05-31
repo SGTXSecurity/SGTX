@@ -1,4 +1,4 @@
-package com.example.demo;
+package com.sgtx.global;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
