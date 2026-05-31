@@ -1,6 +1,6 @@
-package com.example.demo.domain.trade.repository;
+package com.sgtx.domain.trade.repository;
 
-import com.example.demo.domain.trade.entity.TradeEntity;
+import com.sgtx.domain.trade.entity.TradeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TradeRepository extends JpaRepository<TradeEntity, Long> {

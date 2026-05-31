@@ -1,7 +1,7 @@
-package com.example.demo.domain.trade.entity;
+package com.sgtx.domain.trade.entity;
 
-import com.example.demo.domain.user.entity.UserEntity;
-import com.example.demo.domain.item.entity.ItemEntity;
+import com.sgtx.domain.user.entity.UserEntity;
+import com.sgtx.domain.item.entity.ItemEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
