@@ -1,5 +1,6 @@
 package com.sgtx.domain.trade.controller;
 
+import com.sgtx.domain.trade.dto.TradeCreateRequest;
 import com.sgtx.domain.trade.dto.TradeEnvelopeResponse;
 import com.sgtx.domain.trade.dto.TradeVerifyResponse;
 import com.sgtx.domain.trade.service.TradeService;
@@ -18,6 +19,18 @@ import java.util.regex.Pattern;
 public class TradeApiController {
 
     private final TradeService tradeService;
+
+    //post추가
+    @PostMapping
+    public ResponseEntity<ApiResponse<TradeEnvelopeResponse>> createTrade(
+            @RequestBody TradeCreateRequest request) {
+
+        TradeEnvelopeResponse response = tradeService.createTrade(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success("전자봉투 거래 생성 성공", response)
+        );
+    }
 
     @GetMapping("/{tradeId}")
     public ResponseEntity<ApiResponse<TradeEnvelopeResponse>> getTrade(
