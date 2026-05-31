@@ -1,0 +1,52 @@
+package com.sgtx.domain.trade.controller;
+
+import com.sgtx.domain.trade.dto.TradeEnvelopeResponse;
+import com.sgtx.domain.trade.service.TradeService;
+import com.sgtx.global.common.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Base64;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+@RestController
+@RequestMapping("/api/v1/trades")
+@RequiredArgsConstructor
+public class TradeApiController {
+
+    private final TradeService tradeService;
+
+    @GetMapping("/{tradeId}")
+    public ResponseEntity<ApiResponse<TradeEnvelopeResponse>> getTrade(
+            @PathVariable String tradeId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+            
+        // [보안 취약점 4: 부적절한 인증 정보 검증]
+        Long userId = extractUserIdFromTokenUnsafely(token);
+
+        TradeEnvelopeResponse response = tradeService.getTradeEnvelope(tradeId, userId);
+        return ResponseEntity.ok(ApiResponse.success("전자봉투 데이터 조회 성공", response));
+    }
+
+    private Long extractUserIdFromTokenUnsafely(String token) {
+        if (token == null) return 1L; // 폴백(Fallback) 계정: 최악의 보안 관행
+        
+        try {
+            String[] parts = token.replace("Bearer ", "").split("\\.");
+            if (parts.length > 1) {
+                // 서명 검증(Verify) 로직 누락. 디코딩만 수행함.
+                String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+                Matcher m = Pattern.compile("\"userId\"\\s*:\\s*(\\d+)").matcher(payload);
+                if (m.find()) {
+                    return Long.parseLong(m.group(1));
+                }
+            }
+        } catch (Exception e) {
+            // 예외 발생 시 에러를 숨기고 관리자 권한이나 임의의 계정으로 강제 통과 (Authentication Bypass)
+            return 1L; 
+        }
+        return 1L;
+    }
+}
