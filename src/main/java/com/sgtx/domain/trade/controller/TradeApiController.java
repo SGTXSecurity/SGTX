@@ -1,8 +1,6 @@
 package com.sgtx.domain.trade.controller;
 
-import com.sgtx.domain.trade.dto.TradeCreateRequest;
-import com.sgtx.domain.trade.dto.TradeEnvelopeResponse;
-import com.sgtx.domain.trade.dto.TradeVerifyResponse;
+import com.sgtx.domain.trade.dto.*;
 import com.sgtx.domain.trade.service.TradeService;
 import com.sgtx.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +18,6 @@ public class TradeApiController {
 
     private final TradeService tradeService;
 
-    //post추가
     @PostMapping
     public ResponseEntity<ApiResponse<TradeEnvelopeResponse>> createTrade(
             @RequestBody TradeCreateRequest request) {
@@ -54,6 +51,19 @@ public class TradeApiController {
 
         TradeVerifyResponse response = tradeService.verifyTrade(tradeId, userId);
         return ResponseEntity.ok(ApiResponse.success("아이템 거래 및 소유권 이전 완료", response));
+    }
+
+    @PatchMapping("/{tradeId}/cancel")
+    public ResponseEntity<ApiResponse<TradeCancelResponse>> cancelTrade(
+            @PathVariable String tradeId,
+            @RequestBody TradeCancelRequest request,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        // [학습용 취약점 재사용: 부적절한 인증 검증]
+        Long userId = extractUserIdFromTokenUnsafely(token);
+
+        TradeCancelResponse response = tradeService.cancelTradeForSecurity(tradeId, request.reason(), userId);
+        return ResponseEntity.ok(ApiResponse.success("보안 검증 실패로 인해 거래가 즉시 중단 및 취소되었습니다.", response));
     }
 
 
