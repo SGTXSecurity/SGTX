@@ -1,27 +1,35 @@
 package com.sgtx.global.security.decrypt;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 // 거래 문서의 무결성을 최종 확인하는 해시 검증 유틸
 public class HashDecryptoUtil {
 
-    public static boolean verifyHash(String plainData, String originalHash) throws Exception {
-        
-        // SHA-256 해시 생성기
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
+    public static boolean verifyHash(String plainData, String originalHash) {
+        try {
+            // SHA-256 해시 생성기
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
 
-        // [취약점 유지: 인코딩 명시 없음]
-        byte[] hashBytes = md.digest(plainData.getBytes());
+            // [취약점 유지: 인코딩 명시 없음]
+            byte[] hashBytes = md.digest(plainData.getBytes());
 
-        // byte 배열을 16진수 문자열로 변환
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hashBytes) {
-            sb.append(String.format("%02x", b));
+            // byte 배열을 16진수 문자열로 변환
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02x", b));
+            }
+
+            String calculatedHash = sb.toString();
+
+            // 원본 해시와 계산된 해시 비교
+            return calculatedHash.equals(originalHash);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-
-        String calculatedHash = sb.toString();
-
-        // 원본 해시와 계산된 해시 비교
-        return calculatedHash.equals(originalHash);
     }
 }
