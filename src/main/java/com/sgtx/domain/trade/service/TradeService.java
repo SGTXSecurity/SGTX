@@ -1,9 +1,11 @@
 package com.sgtx.domain.trade.service;
 
 import com.sgtx.domain.item.entity.ItemEntity;
+import com.sgtx.domain.trade.dto.TradeCreateRequest;
 import com.sgtx.domain.trade.dto.TradeEnvelopeResponse;
 import com.sgtx.domain.trade.dto.TradeVerifyResponse;
 import com.sgtx.domain.trade.entity.TradeEntity;
+import com.sgtx.domain.user.entity.UserEntity;
 import com.sgtx.global.exception.TradeNotFoundException;
 import com.sgtx.global.exception.UnauthorizedTradeAccessException;
 import jakarta.persistence.EntityManager;
@@ -91,6 +93,52 @@ public class TradeService {
             trade.getTradeId(),
             trade.getStatus(),
             trade.getBuyer().getUserId()
+        );
+    }
+
+    // ============================
+    // 추가: 거래 생성 API
+    @Transactional
+    public TradeEnvelopeResponse createTrade(TradeCreateRequest request) {
+
+        // 구매자 조회
+        UserEntity buyer =
+                entityManager.find(UserEntity.class, request.buyerId());
+
+        // 판매자 조회
+        UserEntity seller =
+                entityManager.find(UserEntity.class, request.sellerId());
+
+        // 아이템 조회
+        ItemEntity item =
+                entityManager.find(ItemEntity.class, request.itemId());
+
+        // 데이터 존재 여부 확인
+        if (buyer == null || seller == null || item == null) {
+            throw new IllegalArgumentException("거래 생성에 필요한 정보가 존재하지 않습니다.");
+        }
+
+        // 거래 생성
+        TradeEntity trade = new TradeEntity();
+
+        trade.setBuyer(buyer);
+        trade.setSeller(seller);
+        trade.setItem(item);
+
+        // 최초 상태
+        trade.setStatus("PENDING");
+
+        // DB 저장
+        entityManager.persist(trade);
+
+        // 생성된 전자봉투 정보 반환
+        return new TradeEnvelopeResponse(
+                trade.getTradeId(),
+                trade.getStatus(),
+                request.encryptedData(),
+                request.encryptedSessionKey(),
+                request.signature(),
+                request.itemHash()
         );
     }
 }
