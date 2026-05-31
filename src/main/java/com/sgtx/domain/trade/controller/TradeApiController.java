@@ -1,6 +1,7 @@
 package com.sgtx.domain.trade.controller;
 
 import com.sgtx.domain.trade.dto.TradeEnvelopeResponse;
+import com.sgtx.domain.trade.dto.TradeVerifyResponse;
 import com.sgtx.domain.trade.service.TradeService;
 import com.sgtx.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,19 @@ public class TradeApiController {
         TradeEnvelopeResponse response = tradeService.getTradeEnvelope(tradeId, userId);
         return ResponseEntity.ok(ApiResponse.success("전자봉투 데이터 조회 성공", response));
     }
+
+    @PatchMapping("/{tradeId}/verify")
+    public ResponseEntity<ApiResponse<TradeVerifyResponse>> verifyTrade(
+            @PathVariable String tradeId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        // [학습용 취약점 재사용: 부적절한 인증 검증]
+        Long userId = extractUserIdFromTokenUnsafely(token);
+
+        TradeVerifyResponse response = tradeService.verifyTrade(tradeId, userId);
+        return ResponseEntity.ok(ApiResponse.success("아이템 거래 및 소유권 이전 완료", response));
+    }
+
 
     private Long extractUserIdFromTokenUnsafely(String token) {
         if (token == null) return 1L; // 폴백(Fallback) 계정: 최악의 보안 관행
