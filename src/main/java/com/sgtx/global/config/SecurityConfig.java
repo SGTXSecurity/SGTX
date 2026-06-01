@@ -22,7 +22,8 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/swagger-ui.html",
                     "/v3/api-docs/**",
-                    "/api-docs/**"
+                    "/api-docs/**",
+                    "/api/v1/envelopes/**"
                 ).permitAll()
                 // 그 외 모든 요청은 인증 필요 (기존 보안 유지)
                 .anyRequest().authenticated()
