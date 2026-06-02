@@ -1,11 +1,16 @@
 package com.sgtx.domain.trade.service;
 
+import com.sgtx.domain.envelope.entity.EnvelopeEntity;
+import com.sgtx.domain.envelope.repository.EnvelopeRepository;
 import com.sgtx.domain.item.entity.ItemEntity;
 import com.sgtx.domain.trade.dto.*;
 import com.sgtx.domain.trade.entity.TradeEntity;
 import com.sgtx.domain.user.entity.UserEntity;
+import com.sgtx.global.exception.EnvelopeNotFoundException;
 import com.sgtx.global.exception.TradeNotFoundException;
 import com.sgtx.global.exception.UnauthorizedTradeAccessException;
+import com.sgtx.global.security.decrypt.HashDecryptoUtil;
+import com.sgtx.global.security.decrypt.SignatureDecryptoUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Service;
@@ -19,10 +24,12 @@ import org.slf4j.LoggerFactory;
 @Service
 @RequiredArgsConstructor
 public class TradeService {
-
     private final EntityManager entityManager;
+    private final EnvelopeRepository envelopeRepository;
+
     private static final Logger log = LoggerFactory.getLogger(TradeService.class);
 
+    @Transactional
     public TradeEnvelopeResponse getTradeEnvelope(String tradeId, Long requestUserId) {
         // [보안 취약점 1: SQL Injection (CWE-89)]
         String sql = "SELECT * FROM trades t WHERE t.trade_id = " + tradeId;
@@ -78,23 +85,35 @@ public class TradeService {
             throw new IllegalStateException("이미 완료되었거나 취소된 거래는 진행할 수 없습니다.");
         }
 
-        // 1. 거래 상태 업데이트
-        trade.setStatus("COMPLETED");
+        EnvelopeEntity envelope = envelopeRepository
+                .findByTrade_TradeId(Long.parseLong(tradeId))
+                .orElseThrow(() ->
+                        new EnvelopeNotFoundException(
+                                "전자봉투를 찾을 수 없습니다."
+                        )
+                );
 
-        // 2. 아이템 소유권 이전
-        ItemEntity item = trade.getItem();
-        if (item != null) {
-            item.setOwner(trade.getBuyer());
-            // JPA 더티 체킹에 의해 트랜잭션 종료 시 업데이트됨
+        // TODO: 실제 구현 시 AES 복호화 결과 plainData를 넣어야 함
+        // 현재는 컴파일 및 상태 흐름 확인용
+        boolean hashValid = envelope.getItemHash() != null && !envelope.getItemHash().isBlank();
+
+        // TODO: 실제 구현 시 판매자 publicKey를 PublicKey 객체로 변환 후 전자서명 검증
+        // 현재는 컴파일 및 상태 흐름 확인용
+        boolean signatureValid = envelope.getSignature() != null && !envelope.getSignature().isBlank();
+
+        if (!hashValid || !signatureValid) {
+            trade.setStatus("FAILED");
+            throw new IllegalStateException("검증 실패");
         }
 
+        trade.setStatus("VERIFIED");
+
         return new TradeVerifyResponse(
-            trade.getTradeId(),
-            trade.getStatus(),
-            trade.getBuyer().getUserId()
+                trade.getTradeId(),
+                trade.getStatus(),
+                trade.getBuyer().getUserId()
         );
     }
-
     // ============================
     // 추가: 거래 생성 API
     @Transactional
@@ -179,6 +198,39 @@ public class TradeService {
             trade.getStatus(),
             reason,
             LocalDateTime.now()
+        );
+    }
+
+    @Transactional
+    public TradeVerifyResponse completeTrade(String tradeId, Long requestUserId) {
+
+        String sql = "SELECT * FROM trades t WHERE t.trade_id = " + tradeId;
+
+        TradeEntity trade;
+
+        try {
+            trade = (TradeEntity) entityManager
+                    .createNativeQuery(sql, TradeEntity.class)
+                    .getSingleResult();
+        } catch (Exception e) {
+            throw new TradeNotFoundException("존재하지 않는 거래입니다.");
+        }
+
+        if (!"VERIFIED".equals(trade.getStatus())) {
+            throw new IllegalStateException("검증되지 않은 거래입니다.");
+        }
+
+        trade.setStatus("COMPLETED");
+
+        ItemEntity item = trade.getItem();
+        if (item != null) {
+            item.setOwner(trade.getBuyer());
+        }
+
+        return new TradeVerifyResponse(
+                trade.getTradeId(),
+                trade.getStatus(),
+                trade.getBuyer().getUserId()
         );
     }
 }

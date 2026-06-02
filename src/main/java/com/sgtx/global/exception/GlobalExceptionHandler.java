@@ -21,6 +21,18 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(403, e.getMessage(), "TRADE_001"));
     }
 
+    @ExceptionHandler(EnvelopeNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEnvelopeNotFound(EnvelopeNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(404, e.getMessage(), "ENVELOPE_002"));
+    }
+
+    @ExceptionHandler(EnvelopeAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEnvelopeAlreadyExists(EnvelopeAlreadyExistsException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(409, e.getMessage(), "ENVELOPE_001"));
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
