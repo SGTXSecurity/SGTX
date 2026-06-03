@@ -41,4 +41,7 @@ public class TradeEntity {
 
     @Column(name = "status")
     private String status;
+
+    @Column(name = "price")
+    private Integer price;
 }
