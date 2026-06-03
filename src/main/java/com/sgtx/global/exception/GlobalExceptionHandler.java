@@ -33,6 +33,21 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(409, e.getMessage(), "ENVELOPE_001"));
     }
 
+    @ExceptionHandler(PaymentFailedException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentFailed(PaymentFailedException e) {
+        // [보안 취약점 9: 상세한 오류 사유 노출 (CWE-209)]
+        // 결제 실패 사유를 클라이언트에게 너무 상세하게 전달함.
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
+                .body(new ErrorResponse(402, e.getMessage(), e.getCode()));
+    }
+
+    @ExceptionHandler(PaymentAmountMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleAmountMismatch(PaymentAmountMismatchException e) {
+        // [보안 취약점 10: 비즈니스 데이터 노출 (CWE-200)]
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(409, e.getMessage(), "PAY_003"));
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
