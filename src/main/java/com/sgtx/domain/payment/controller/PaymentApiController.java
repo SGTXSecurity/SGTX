@@ -2,6 +2,7 @@ package com.sgtx.domain.payment.controller;
 
 import com.sgtx.domain.payment.dto.PaymentRequestDto;
 import com.sgtx.domain.payment.dto.PaymentResponseDto;
+import com.sgtx.domain.payment.dto.PaymentDetailResponseDto;
 import com.sgtx.domain.payment.service.PaymentService;
 import com.sgtx.global.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,20 @@ public class PaymentApiController {
         PaymentResponseDto response = paymentService.processPayment(request, currentUserId);
 
         return ResponseEntity.ok(ApiResponse.success("결제가 성공적으로 완료되었습니다.", response));
+    }
+
+    @GetMapping("/{paymentId}")
+    public ResponseEntity<ApiResponse<PaymentDetailResponseDto>> getPaymentDetail(
+            @PathVariable Long paymentId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        // [학습용 취약점 재사용: 부적절한 인증 검증]
+        // 여전히 서명 검증을 하지 않는 취약한 유틸리티를 사용하여 권한을 탈취당할 수 있음.
+        Long currentUserId = extractUserIdFromTokenUnsafely(token);
+
+        PaymentDetailResponseDto response = paymentService.getPaymentDetail(paymentId, currentUserId);
+
+        return ResponseEntity.ok(ApiResponse.success("결제 내역 조회 성공", response));
     }
 
     // [보안 취약점 8: 인증 우회 유틸리티 (CWE-306)]
