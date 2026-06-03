@@ -27,8 +27,9 @@ public class PaymentEntity {
     @Column(name = "amount", nullable = false)
     private Integer amount;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private String status;
+    private PaymentStatus paymentStatus;
 
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;

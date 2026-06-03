@@ -3,8 +3,10 @@ package com.sgtx.domain.payment.service;
 import com.sgtx.domain.payment.dto.PaymentRequestDto;
 import com.sgtx.domain.payment.dto.PaymentResponseDto;
 import com.sgtx.domain.payment.entity.PaymentEntity;
+import com.sgtx.domain.payment.entity.PaymentStatus;
 import com.sgtx.domain.payment.repository.PaymentRepository;
 import com.sgtx.domain.trade.entity.TradeEntity;
+import com.sgtx.domain.trade.entity.TradeStatus;
 import com.sgtx.domain.trade.repository.TradeRepository;
 import com.sgtx.global.exception.PaymentAmountMismatchException;
 import com.sgtx.global.exception.PaymentFailedException;
@@ -63,21 +65,21 @@ public class PaymentService {
         payment.setTradeId(trade.getTradeId());
         payment.setCardId(request.getCardId());
         payment.setAmount(request.getAmount());
-        payment.setStatus("SUCCESS");
+        payment.setPaymentStatus(PaymentStatus.SUCCESS);
         payment.setApprovedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
         // 거래 상태 업데이트
         // [보안 취약점 6: 상태 전이의 원자성 결여]
         // 결제는 성공했는데 여기서 예외가 발생하면? 또는 결제 API 호출 전후의 상태 관리가 부실함.
-        trade.setStatus("COMPLETED");
+        trade.setStatus(TradeStatus.COMPLETED);
         tradeRepository.save(trade);
 
         return PaymentResponseDto.builder()
                 .paymentId(payment.getPaymentId())
                 .tradeId(payment.getTradeId())
                 .amount(payment.getAmount())
-                .paymentStatus(payment.getStatus())
+                .paymentStatus(payment.getPaymentStatus().name())
                 .approvedAt(payment.getApprovedAt())
                 .build();
     }

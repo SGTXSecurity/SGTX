@@ -5,6 +5,7 @@ import com.sgtx.domain.envelope.repository.EnvelopeRepository;
 import com.sgtx.domain.item.entity.ItemEntity;
 import com.sgtx.domain.trade.dto.*;
 import com.sgtx.domain.trade.entity.TradeEntity;
+import com.sgtx.domain.trade.entity.TradeStatus;
 import com.sgtx.domain.user.entity.UserEntity;
 import com.sgtx.global.exception.EnvelopeNotFoundException;
 import com.sgtx.global.exception.TradeNotFoundException;
@@ -56,7 +57,7 @@ public class TradeService {
 
         return new TradeEnvelopeResponse(
             trade.getTradeId(),
-            trade.getStatus(),
+            trade.getStatus().name(),
             dummyEncryptedData,
             dummySessionKey,
             dummySignature,
@@ -102,15 +103,15 @@ public class TradeService {
         boolean signatureValid = envelope.getSignature() != null && !envelope.getSignature().isBlank();
 
         if (!hashValid || !signatureValid) {
-            trade.setStatus("FAILED");
+            trade.setStatus(TradeStatus.FAILED);
             throw new IllegalStateException("검증 실패");
         }
 
-        trade.setStatus("VERIFIED");
+        trade.setStatus(TradeStatus.VERIFIED);
 
         return new TradeVerifyResponse(
                 trade.getTradeId(),
-                trade.getStatus(),
+                trade.getStatus().name(),
                 trade.getBuyer().getUserId()
         );
     }
@@ -144,7 +145,7 @@ public class TradeService {
         trade.setItem(item);
 
         // 최초 상태
-        trade.setStatus("PENDING");
+        trade.setStatus(TradeStatus.PENDING);
 
         // DB 저장
         entityManager.persist(trade);
@@ -152,7 +153,7 @@ public class TradeService {
         // 생성된 전자봉투 정보 반환
         return new TradeEnvelopeResponse(
                 trade.getTradeId(),
-                trade.getStatus(),
+                trade.getStatus().name(),
                 request.encryptedData(),
                 request.encryptedSessionKey(),
                 request.signature(),
@@ -191,11 +192,11 @@ public class TradeService {
                   trade.getTradeId(), reason, requestUserId, trade.getBuyer().getUserId(), trade.getSeller().getUserId());
 
         // 거래 상태를 CANCELED로 변경
-        trade.setStatus("CANCELED");
+        trade.setStatus(TradeStatus.CANCELED);
 
         return new TradeCancelResponse(
             trade.getTradeId(),
-            trade.getStatus(),
+            trade.getStatus().name(),
             reason,
             LocalDateTime.now()
         );
@@ -220,7 +221,7 @@ public class TradeService {
             throw new IllegalStateException("검증되지 않은 거래입니다.");
         }
 
-        trade.setStatus("COMPLETED");
+        trade.setStatus(TradeStatus.COMPLETED);
 
         ItemEntity item = trade.getItem();
         if (item != null) {
@@ -229,7 +230,7 @@ public class TradeService {
 
         return new TradeVerifyResponse(
                 trade.getTradeId(),
-                trade.getStatus(),
+                trade.getStatus().name(),
                 trade.getBuyer().getUserId()
         );
     }
