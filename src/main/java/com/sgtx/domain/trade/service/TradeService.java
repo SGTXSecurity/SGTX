@@ -217,7 +217,7 @@ public class TradeService {
             throw new TradeNotFoundException("존재하지 않는 거래입니다.");
         }
 
-        if (trade.getStatus() == TradeStatus.VERIFIED) {
+        if (trade.getStatus() != TradeStatus.VERIFIED) {
             throw new IllegalStateException("검증되지 않은 거래입니다.");
         }
 
