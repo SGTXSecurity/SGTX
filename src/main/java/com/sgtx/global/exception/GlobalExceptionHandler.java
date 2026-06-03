@@ -48,6 +48,12 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(409, e.getMessage(), "PAY_003"));
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(404, e.getMessage(), "USER_001"));
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
