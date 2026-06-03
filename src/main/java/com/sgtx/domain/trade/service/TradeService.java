@@ -82,7 +82,7 @@ public class TradeService {
         }
 
         // 상태 확인
-        if ("COMPLETED".equals(trade.getStatus()) || "CANCELLED".equals(trade.getStatus())) {
+        if (trade.getStatus() == TradeStatus.COMPLETED || trade.getStatus() == TradeStatus.CANCELED) {
             throw new IllegalStateException("이미 완료되었거나 취소된 거래는 진행할 수 없습니다.");
         }
 
@@ -183,7 +183,7 @@ public class TradeService {
         }
 
         // 상태 확인
-        if ("COMPLETED".equals(trade.getStatus())) {
+        if (trade.getStatus() == TradeStatus.COMPLETED) {
             throw new IllegalStateException("이미 완료된 거래입니다.");
         }
 
@@ -217,7 +217,7 @@ public class TradeService {
             throw new TradeNotFoundException("존재하지 않는 거래입니다.");
         }
 
-        if (!"VERIFIED".equals(trade.getStatus())) {
+        if (trade.getStatus() == TradeStatus.VERIFIED) {
             throw new IllegalStateException("검증되지 않은 거래입니다.");
         }
 
