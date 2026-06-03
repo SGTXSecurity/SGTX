@@ -17,20 +17,9 @@ public class SecurityConfig {
             // CSRF 비활성화 (API 테스트 편의성)
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                // Swagger UI 및 OpenAPI 관련 경로 허용
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/api-docs/**",
-                    "/api/v1/envelopes/**",
-                    "/api/v1/cards/**"
-                ).permitAll()
-                // 그 외 모든 요청은 인증 필요 (기존 보안 유지)
-                .anyRequest().authenticated()
-            )
-            // 기본 로그인 폼 유지 (필요 시 사용)
-            .formLogin(form -> form.permitAll());
+                // 대시보드 및 모든 API 경로 허용 (학습용이므로 전체 허용으로 변경)
+                .anyRequest().permitAll()
+            );
 
         return http.build();
     }
