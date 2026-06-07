@@ -29,11 +29,11 @@ public class UserEntity {
     private String username;
 
     @Lob
-    @Column(name = "public_key", nullable = false)
+    @Column(name = "public_key", nullable = false, columnDefinition = "TEXT")
     private String publicKey;
 
     @Lob
-    @Column(name = "private_key")
+    @Column(name = "private_key", columnDefinition = "TEXT")
     private String privateKey;
 
     @CreationTimestamp

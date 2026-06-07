@@ -175,3 +175,24 @@ function showError(msg) {
         <p>${msg}</p>
     `;
 }
+
+function changeRoleView() {
+    const role = document.getElementById('roleSelector').value;
+
+    const consumer = document.getElementById('consumerCardSection');
+    const company = document.getElementById('cardCompanySection');
+    const buyer = document.getElementById('buyerPaymentSection');
+    const itemSection = document.getElementById('itemSection');
+
+    if (consumer)
+        consumer.style.display = role === 'consumer' ? 'block' : 'none';
+
+    if (company)
+        company.style.display = role === 'cardCompany' ? 'block' : 'none';
+
+    if (buyer)
+        buyer.style.display = role === 'buyer' ? 'block' : 'none';
+
+    if (itemSection)
+        itemSection.style.display = role === 'cardCompany' ? 'none' : 'block';
+}
