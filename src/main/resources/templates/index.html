@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGTX 게임 아이템 마켓</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        :root { 
+            --primary-blue: #0052cc; 
+            --light-blue: #e7f1ff;
+            --dark-text: #172b4d;
+            --border-color: #dfe1e6;
+        }
+        body { 
+            background-color: #ffffff; 
+            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif; 
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+        .navbar { 
+            background-color: #ffffff; 
+            border-bottom: 2px solid var(--light-blue);
+            padding: 1rem 0;
+        }
+        .hero-section { 
+            background-color: var(--light-blue); 
+            color: var(--primary-blue); 
+            padding: 80px 0; 
+            border-radius: 0; 
+            margin-bottom: 4rem; 
+        }
+        .container {
+            max-width: 1140px;
+        }
+        .item-card { 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            transition: all 0.3s ease; 
+            background: white; 
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .item-card:hover { 
+            border-color: var(--primary-blue);
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.2); 
+        }
+        .item-img { 
+            height: 180px; 
+            background-color: #f4f5f7; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 4.5rem; 
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .price-tag { 
+            color: var(--primary-blue); 
+            font-weight: 700; 
+            font-size: 1.3rem; 
+        }
+        .btn-primary {
+            background-color: var(--primary-blue);
+            border: none;
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+        }
+        .hacker-mode-section { 
+            background-color: #f4f5f7; 
+            color: #444; 
+            padding: 20px; 
+            border-radius: 8px; 
+            margin-top: 1.5rem; 
+            display: none; 
+            border: 1px dashed #ccc;
+        }
+        .modal-content {
+            border-radius: 16px;
+            border: none;
+        }
+        .modal-header {
+            padding: 2rem 2rem 1rem 2rem;
+        }
+        .modal-body {
+            padding: 1rem 2rem 2rem 2rem;
+        }
+        .api-inspector-code { 
+            background-color: #f4f5f7; 
+            color: #274555; 
+            padding: 20px; 
+            border-radius: 8px; 
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem; 
+            border: 1px solid var(--border-color);
+        }
+        .nav-pills .nav-link.active {
+            background-color: var(--primary-blue);
+        }
+        .nav-pills .nav-link {
+            color: var(--dark-text);
+            margin-right: 10px;
+        }
+        /* 여유 있는 간격을 위한 유틸리티 */
+        .section-title { margin-bottom: 2.5rem; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="navbar sticky-top">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="#" style="color: var(--primary-blue);">
+            <i class="bi bi-shield-check"></i> SGTX 보안 마켓
+        </a>
+        <div class="d-flex align-items-center gap-4">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="hackerModeToggle" onchange="toggleHackerMode()">
+                <label class="form-check-label fw-bold" for="hackerModeToggle" style="font-size: 0.9rem;">개발자/해커 모드</label>
+            </div>
+            <div class="d-flex align-items-center">
+                <span class="me-2 small fw-bold">접속 계정:</span>
+                <select id="userSelector" class="form-select form-select-sm" style="width: 160px; border-radius: 6px;">
+                    <option value="user1">사용자 A (구매자)</option>
+                    <option value="user2">사용자 B (판매자)</option>
+                    <option value="hacker">해커 (공격자)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<div class="hero-section text-center">
+    <div class="container">
+        <h1 class="display-5 fw-bold mb-3">프로페셔널 아이템 거래</h1>
+        <p class="lead mb-0">당신의 디지털 자산을 위한 강력한 보안 거래 시스템을 경험하세요.</p>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+    <h3 class="section-title">추천 아이템</h3>
+    <div class="row g-4">
+        <!-- Sample Item -->
+        <div class="col-md-6 col-lg-4">
+            <div class="item-card">
+                <div class="item-img">🗡️</div>
+                <div class="card-body p-0">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title mb-0 fw-bold">전설의 서리 검</h5>
+                        <span class="badge bg-primary rounded-pill">에픽 아이템</span>
+                    </div>
+                    <p class="text-muted mb-4">SGTX 전자봉투 시스템을 통해 검증된 희귀 아티팩트입니다. 정품 보장 및 안전한 배송을 약속합니다.</p>
+                    <div class="d-flex justify-content-between align-items-center pt-2">
+                        <span class="price-tag">50,000 KRW</span>
+                        <button class="btn btn-primary rounded-pill px-4" onclick="startPurchaseFlow()">아이템 구매</button>
+                    </div>
+                    
+                    <!-- Malicious Actions -->
+                    <div class="hacker-mode-section mt-4">
+                        <p class="small fw-bold mb-2 text-uppercase text-danger">공격자 샌드박스</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-sm btn-outline-danger" onclick="forcePayment()">
+                                <i class="bi bi-lightning-fill"></i> 취약점 공격: 검증 우회 결제
+                            </button>
+                            <button class="btn btn-sm btn-outline-dark" onclick="stealReceipt()">
+                                <i class="bi bi-incognito"></i> 취약점 공격: IDOR 영수증 탈취
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- More items can be added here -->
+    </div>
+</div>
+
+<!-- Educational Modal -->
+<div class="modal fade" id="eduModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 1.5rem;">
+            <div class="modal-header border-0 bg-light px-4 pt-4">
+                <h5 class="modal-title fw-bold" id="modalTitle">API 및 보안 인사이트</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Tabs -->
+                <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active rounded-pill px-4 fw-semibold" id="pills-user-tab" data-bs-toggle="pill" data-bs-target="#pills-user" type="button" role="tab">🎮 사용자 화면</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 fw-semibold" id="pills-api-tab" data-bs-toggle="pill" data-bs-target="#pills-api" type="button" role="tab">💻 API 인스펙터</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link rounded-pill px-4 fw-semibold" id="pills-security-tab" data-bs-toggle="pill" data-bs-target="#pills-security" type="button" role="tab">🛡️ 보안 인사이트</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="pills-tabContent">
+                    <!-- Tab 1: User Experience -->
+                    <div class="tab-pane fade show active" id="pills-user" role="tabpanel">
+                        <div id="userExperienceContent" class="text-center py-4">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    <!-- Tab 2: API Details -->
+                    <div class="tab-pane fade" id="pills-api" role="tabpanel">
+                        <div id="apiInspectorContent">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                    <!-- Tab 3: Security Explanation -->
+                    <div class="tab-pane fade" id="pills-security" role="tabpanel">
+                        <div id="securityInsightContent">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light p-4" style="border-radius: 0 0 1.5rem 1.5rem;">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">닫기</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/dashboard.js"></script>
+</body>
+</html>
