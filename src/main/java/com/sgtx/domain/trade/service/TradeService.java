@@ -6,6 +6,7 @@ import com.sgtx.domain.item.entity.ItemEntity;
 import com.sgtx.domain.trade.dto.*;
 import com.sgtx.domain.trade.entity.TradeEntity;
 import com.sgtx.domain.trade.entity.TradeStatus;
+import com.sgtx.domain.trade.repository.TradeRepository;
 import com.sgtx.domain.user.entity.UserEntity;
 import com.sgtx.global.exception.EnvelopeNotFoundException;
 import com.sgtx.global.exception.TradeNotFoundException;
@@ -21,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,24 +33,16 @@ public class TradeService {
     private final PaymentRepository paymentRepository;
 
     private static final Logger log = LoggerFactory.getLogger(TradeService.class);
+    private final TradeRepository tradeRepository;
 
     @Transactional
     public TradeEnvelopeResponse getTradeEnvelope(String tradeId, Long requestUserId) {
-        // [보안 취약점 1: SQL Injection (CWE-89)]
-        String sql = "SELECT * FROM trades t WHERE t.trade_id = " + tradeId;
-        Query query = entityManager.createNativeQuery(sql, TradeEntity.class);
-        
-        TradeEntity trade;
-        try {
-            trade = (TradeEntity) query.getSingleResult();
-        } catch (Exception e) {
-            throw new TradeNotFoundException("내역 없는 거래번호:: " + tradeId);
-        }
+        TradeEntity trade = tradeRepository.findById(Long.parseLong(tradeId))
+            .orElseThrow(() -> new TradeNotFoundException("존재하지 않는 거래입니다."));
 
-        // [수정: 문제점 해결] .equals()를 사용한 정확한 객체 비교 (CWE-697 대응)
-        if (trade.getBuyer() != null && trade.getBuyer().getUserId() != requestUserId) {
+        if(trade.getBuyer().getUserId().equals(requestUserId)){
             log.error("보안 문제 발생",
-                      requestUserId, trade.getBuyer().getUserId());
+                    requestUserId, trade.getBuyer().getUserId());
             throw new UnauthorizedTradeAccessException("이 거래를 조회할 권한이 없습니다.");
         }
 
@@ -69,16 +61,11 @@ public class TradeService {
         );
     }
 
+    // 전자봉투 검증
     @Transactional
     public TradeVerifyResponse verifyTrade(String tradeId, Long requestUserId) {
-        // [학습용 취약점 재사용: SQL Injection]
-        String sql = "SELECT * FROM trades t WHERE t.trade_id = " + tradeId;
-        TradeEntity trade;
-        try {
-            trade = (TradeEntity) entityManager.createNativeQuery(sql, TradeEntity.class).getSingleResult();
-        } catch (Exception e) {
-            throw new TradeNotFoundException("존재하지 않는 거래입니다.");
-        }
+        TradeEntity trade = tradeRepository.findById(Long.parseLong(tradeId))
+                .orElseThrow(() -> new TradeNotFoundException("존재하지 않는 거래입니다."));
 
         // [수정: 문제점 해결] .equals() 사용
         if (!trade.getBuyer().getUserId().equals(requestUserId)) {
@@ -135,6 +122,7 @@ public class TradeService {
         );
     }
 
+    //거래 시작( 전자봉투 생성 )
     @Transactional
     public TradeEnvelopeResponse createTrade(TradeCreateRequest request) {
 
@@ -177,8 +165,8 @@ public class TradeService {
                             + "|itemName=" + item.getItemName()
                             + "|price=" + trade.getPrice();
 
+            //2. AES 키 생성 & 암호화
             SecretKey aesKey = AesCryptoUtil.generateAesKey();
-
             String encryptedData = AesCryptoUtil.encrypt(plainData, aesKey);
 
             PublicKey buyerPublicKey =
@@ -186,12 +174,14 @@ public class TradeService {
                             buyer.getPublicKey()
                     );
 
+            //3, RSA (구매자 공개키 -> 암호화)
             String encryptedSessionKey =
                     RsaCryptoUtil.encryptAesKey(
                             aesKey,
                             buyerPublicKey
                     );
 
+            //4. 해시
             String itemHash =
                     HashUtil.generateSHA1(plainData);
 
@@ -202,6 +192,7 @@ public class TradeService {
             PrivateKey sellerPrivateKey =
                     keyPairUtil.getPrivateKeyFromString(seller.getPrivateKey());
 
+            //5. 전자서명
             String signature =
                     SignatureUtil.createSignature(itemHash, sellerPrivateKey);
 
@@ -231,16 +222,10 @@ public class TradeService {
 
     @Transactional
     public TradeCancelResponse cancelTradeForSecurity(String tradeId, String reason, Long requestUserId) {
-        // [학습용 취약점 재사용: SQL Injection]
-        String sql = "SELECT * FROM trades t WHERE t.trade_id = " + tradeId;
-        TradeEntity trade;
-        try {
-            trade = (TradeEntity) entityManager.createNativeQuery(sql, TradeEntity.class).getSingleResult();
-        } catch (Exception e) {
-            throw new TradeNotFoundException("존재하지 않는 거래입니다.");
-        }
+        TradeEntity trade = tradeRepository.findById(Long.parseLong(tradeId))
+                .orElseThrow(() -> new TradeNotFoundException("존재하지 않는 거래입니다."));
 
-        // [수정: 문제점 해결] .equals() 사용
+        // .equals() 사용
         if (!trade.getBuyer().getUserId().equals(requestUserId) && !trade.getSeller().getUserId().equals(requestUserId)) {
             throw new UnauthorizedTradeAccessException("해당 거래를 취소할 권한이 없습니다.");
         }

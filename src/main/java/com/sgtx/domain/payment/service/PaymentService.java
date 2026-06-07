@@ -45,12 +45,13 @@ public class PaymentService {
             throw new UnauthorizedTradeAccessException("해당 결제에 접근할 권한이 없습니다.");
         }
 
+        if (trade.getStatus() == TradeStatus.COMPLETED){
+            throw new IllegalStateException("이미 결제가 완료된 거래입니다.");
+        }
+
         if (trade.getStatus() != TradeStatus.VERIFIED) {
             log.error("보안 문제: 검증되지 않은 거래에 대한 결제 시도");
             throw new IllegalStateException("보안 검증이 완료되지 않은 거래는 결제할 수 없습니다.");
-        }
-        if (trade.getStatus() == TradeStatus.COMPLETED){
-            throw new IllegalStateException("이미 결제가 완료된 거래입니다.");
         }
 
         if (!trade.getPrice().equals(request.getAmount())) {

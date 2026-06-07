@@ -1,6 +1,6 @@
 package com.sgtx.domain.card.dto;
 
-// 카드 등록 요청 DTO
+// 카드 등록 요청 DTO (소비자용)
 public record CardRegisterRequest(
         Long userId,
         String cardCompany,
