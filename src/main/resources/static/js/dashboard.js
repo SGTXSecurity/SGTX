@@ -83,44 +83,28 @@ function setSecurityInsight(title, description, cwe, isExploited = false) {
     }
 }
 
-// 일반 흐름: 생성 -> 검증 -> 결제
-async function startPurchaseFlow() {
+// 일반 흐름: 생성 -> 검증 -> 결제 수정
+async function startPurchaseFlow(itemId, price) {
     clearModal();
     eduModal.show();
 
-    // 1. 거래 생성
-    document.getElementById('userExperienceContent').innerHTML = '<h6>1단계: 보안 거래 초기화 중...</h6>';
     const tradeRes = await callApi('POST', '/api/v1/trades', {
-        buyerId: 1, sellerId: 2, itemId: 1, price: 50000,
-        encryptedData: "...", encryptedSessionKey: "...", signature: "...", itemHash: "..."
+        buyerId: 1,
+        sellerId: 2,
+        itemId: itemId,
+        price: price,
+        encryptedData: "...",
+        encryptedSessionKey: "...",
+        signature: "...",
+        itemHash: "..."
     });
-    
+
     if (tradeRes.status !== 200) return showError('거래 생성에 실패했습니다.');
     currentTradeId = tradeRes.data.data.tradeId;
 
-    // 2. 거래 검증
-    document.getElementById('userExperienceContent').innerHTML = '<h6>2단계: 전자서명 및 해시 검증 중...</h6>';
     const verifyRes = await callApi('PATCH', `/api/v1/trades/${currentTradeId}/verify`);
-    
+
     if (verifyRes.status !== 200) return showError('검증에 실패했습니다.');
-
-    // 3. 결제 처리
-    document.getElementById('userExperienceContent').innerHTML = '<h6>3단계: 대금 결제 처리 중...</h6>';
-    const payRes = await callApi('POST', '/api/v1/payments', {
-        tradeId: currentTradeId, cardId: 1, amount: 50000
-    });
-
-    if (payRes.status === 200) {
-        currentPaymentId = payRes.data.data.paymentId;
-        document.getElementById('userExperienceContent').innerHTML = `
-            <div class="text-success"><i class="bi bi-check-circle-fill display-1"></i></div>
-            <h4 class="fw-bold mt-3">구매 완료!</h4>
-            <p class="text-muted">전설의 서리 검이 인벤토리에 추가되었습니다.</p>
-        `;
-        setSecurityInsight("정상적인 핸드쉐이크", "이 흐름은 '요청 -> 검증 -> 이행'의 보안 시퀀스를 준수합니다. 로직 우회가 발생하지 않았습니다.", "해당 없음");
-    } else {
-        showError('결제에 실패했습니다.');
-    }
 }
 
 // 공격: 검증 건너뛰기

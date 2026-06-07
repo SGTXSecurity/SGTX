@@ -141,7 +141,6 @@ public class TradeService {
         trade.setBuyer(buyer);
         trade.setSeller(seller);
         trade.setItem(item);
-        trade.setPrice(request.price()); // 가격 설정
 
         // 최초 상태
         trade.setStatus(TradeStatus.PENDING);
