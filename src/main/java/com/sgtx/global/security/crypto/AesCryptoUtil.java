@@ -11,7 +11,6 @@ public class AesCryptoUtil {
     // 사용할 암호화 알고리즘
     private static final String AES = "AES";
 
-    // [보안 취약점 1: 안전하지 않은 암호화 모드 사용]
     // ECB 모드는 같은 평문 블록이 같은 암호문 블록으로 변환된다.
     // 따라서 데이터 패턴이 노출될 수 있다.
     // 실제 서비스에서는 AES/GCM 또는 AES/CBC + IV 사용이 권장된다.
@@ -23,7 +22,6 @@ public class AesCryptoUtil {
         // AES 키 생성기 생성
         KeyGenerator keyGenerator = KeyGenerator.getInstance(AES);
 
-        // [보안 취약점 2: 키 길이 명시 부족 가능성]
         // 키 길이를 명확히 지정하지 않으면 환경에 따라 기본 키 길이가 사용될 수 있다.
         // 실제 서비스에서는 128 또는 256 비트처럼 명확히 지정하는 것이 좋다.
         return keyGenerator.generateKey();
@@ -37,7 +35,6 @@ public class AesCryptoUtil {
         // 공개키/개인키 방식이 아니라 같은 secretKey로 암호화와 복호화를 수행한다.
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
 
-        // [보안 취약점 3: 문자 인코딩 명시 없음]
         // getBytes()는 실행 환경의 기본 인코딩을 사용한다.
         // 환경이 달라지면 암호화 결과나 복호화 결과가 달라질 수 있다.
         byte[] encrypted = cipher.doFinal(plainText.getBytes());

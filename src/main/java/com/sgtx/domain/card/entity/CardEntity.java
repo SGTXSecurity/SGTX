@@ -29,7 +29,7 @@ public class CardEntity {
     @Column(name = "card_company", length = 50)
     private String cardCompany;
 
-    // 원본 카드번호는 저장하지 않고 마스킹된 값만 저장한다. (예: 1234-****-****-5678)
+    //마스킹된 값 저장 ex) 1234-****-****-5678
     @Column(name = "masked_card_number", length = 30)
     private String maskedCardNumber;
 

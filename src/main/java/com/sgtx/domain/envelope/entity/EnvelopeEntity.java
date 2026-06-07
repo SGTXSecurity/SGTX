@@ -29,7 +29,7 @@ public class EnvelopeEntity {
     @Column(name = "envelope_id")
     private Long envelopeId;
 
-    // trade_id 는 UNIQUE KEY 표기 / 한 거래에 하나의 전자봉투만 매핑
+    //한 거래에 하나의 전자봉투만 매핑
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trade_id", nullable = false, unique = true)
     private TradeEntity trade;

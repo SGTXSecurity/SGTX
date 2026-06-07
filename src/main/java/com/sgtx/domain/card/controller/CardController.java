@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+//카드 API 명세
 @RestController
 @RequestMapping("/api/v1/cards")
 @RequiredArgsConstructor
@@ -23,7 +24,7 @@ public class CardController {
 
     private final CardService cardService;
 
-    // 카드 등록
+    // 카드 등록 Psost
     @PostMapping
     public ApiResponse<CardRegisterResponse> registerCard(
             @RequestBody CardRegisterRequest request

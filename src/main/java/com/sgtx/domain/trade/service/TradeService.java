@@ -115,7 +115,7 @@ public class TradeService {
             boolean signatureValid = com.sgtx.global.security.decrypt.SignatureDecryptoUtil.verifySignature(envelope.getItemHash(), envelope.getSignature(), sellerPublicKey);
 
             if (!hashValid || !signatureValid) {
-                log.error("🚨 [SECURITY BREACH] 위변조 감지! Hash Valid: {}, Signature Valid: {}", hashValid, signatureValid);
+                log.error("🚨 [SECURITY BREACH] 위변조 감지 Hash Valid: {}, Signature Valid: {}", hashValid, signatureValid);
                 trade.setStatus(TradeStatus.FAILED);
                 throw new IllegalStateException("검증 실패: 데이터 위변조 또는 서명 불일치가 감지되었습니다.");
             }

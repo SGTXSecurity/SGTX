@@ -4,8 +4,7 @@ package com.sgtx.domain.card.dto;
 public record CardRegisterRequest(
         Long userId,
         String cardCompany,
-
-        // 원본 카드 번호 (DB 에는 마스킹 후 저장, 응답에는 절대 노출하지 않는다)
+        // 원본 카드 번호 (DB 에는 마스킹 후 저장, 응답에는 절대 노출x)
         String cardNumber
 ) {
 }

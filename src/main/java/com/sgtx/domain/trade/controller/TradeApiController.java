@@ -33,8 +33,7 @@ public class TradeApiController {
     public ResponseEntity<ApiResponse<TradeEnvelopeResponse>> getTrade(
             @PathVariable String tradeId,
             @RequestHeader(value = "Authorization", required = false) String token) {
-            
-        // [보안 취약점 4: 부적절한 인증 정보 검증]
+
         Long userId = extractUserIdFromTokenUnsafely(token);
 
         TradeEnvelopeResponse response = tradeService.getTradeEnvelope(tradeId, userId);

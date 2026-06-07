@@ -30,7 +30,6 @@ public class PaymentService {
     private final TradeRepository tradeRepository;
     private final CardRepository cardRepository;
 
-    // [보안 취약점 1: 트랜잭션 관리 미흡 (CWE-209)] 
     @Transactional
     public PaymentResponseDto processPayment(PaymentRequestDto request, Long currentUserId) {
 
@@ -40,10 +39,7 @@ public class PaymentService {
         TradeEntity trade = tradeRepository.findById(request.getTradeId())
                 .orElseThrow(() -> new TradeNotFoundException("Trade not found: " + request.getTradeId()));
 
-        // [보안 취약점 3: Insecure Direct Object Reference (IDOR) (CWE-639)]
-        // (IDOR 취약점 유지)
 
-        // [보안 취약점 4: 비즈니스 로직 검증 취약 - 값 비교 (CWE-697 수정 완료)]
         if (!trade.getPrice().equals(request.getAmount())) {
             throw new PaymentAmountMismatchException("요청된 결제 금액(" + request.getAmount() + ")이 실제 거래 금액(" + trade.getPrice() + ")과 일치하지 않습니다.");
         }
