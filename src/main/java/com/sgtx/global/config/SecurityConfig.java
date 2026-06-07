@@ -18,14 +18,13 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 // Swagger UI 및 OpenAPI 관련 경로 허용
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/api-docs/**",
-                    "/api/v1/envelopes/**",
-                    "/api/v1/cards/**"
-                ).permitAll()
+                    .requestMatchers(
+                            "/swagger-ui/**",
+                            "/swagger-ui.html",
+                            "/v3/api-docs/**",
+                            "/api-docs/**",
+                            "/api/v1/**"
+                    ).permitAll()
                 // 그 외 모든 요청은 인증 필요 (기존 보안 유지)
                 .anyRequest().authenticated()
             )
