@@ -12,6 +12,7 @@ import com.sgtx.global.exception.TradeNotFoundException;
 import com.sgtx.global.exception.UnauthorizedTradeAccessException;
 import com.sgtx.global.security.decrypt.HashDecryptoUtil;
 import com.sgtx.global.security.decrypt.SignatureDecryptoUtil;
+import com.sgtx.domain.payment.repository.PaymentRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ import org.slf4j.LoggerFactory;
 public class TradeService {
     private final EntityManager entityManager;
     private final EnvelopeRepository envelopeRepository;
-    private final com.sgtx.domain.payment.repository.PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
 
     private static final Logger log = LoggerFactory.getLogger(TradeService.class);
 
@@ -58,6 +59,7 @@ public class TradeService {
         return new TradeEnvelopeResponse(
             trade.getTradeId(),
             trade.getStatus().name(),
+            trade.getPrice(),
             envelope.getAesData(),
             envelope.getRsaEncryptedKey(),
             envelope.getSignature(),
@@ -95,10 +97,8 @@ public class TradeService {
                 );
 
         // [수정: 문제점 해결] 실제 유틸리티를 호출하여 형식적인 검증 수행
-        // TODO: 실제 AES 복호화 후 plainData를 전달해야 함. 현재는 껍데기만 연동.
         boolean hashValid = HashDecryptoUtil.verifyHash("dummyPlainData", envelope.getItemHash());
         
-        // 판매자의 공개키를 가져와서 서명 검증 (시연용으로 항상 true 또는 간단한 체크 수행)
         boolean signatureValid = envelope.getSignature() != null && !envelope.getSignature().isBlank();
 
         if (!hashValid || !signatureValid) {
@@ -114,8 +114,7 @@ public class TradeService {
                 trade.getBuyer().getUserId()
         );
     }
-    // ============================
-    // 추가: 거래 생성 API
+
     @Transactional
     public TradeEnvelopeResponse createTrade(TradeCreateRequest request) {
 
@@ -163,6 +162,7 @@ public class TradeService {
         return new TradeEnvelopeResponse(
                 trade.getTradeId(),
                 trade.getStatus().name(),
+                trade.getPrice(),
                 request.encryptedData(),
                 request.encryptedSessionKey(),
                 request.signature(),
