@@ -194,6 +194,74 @@ function showError(msg) {
     `;
 }
 
+async function registerCard() {
+
+    const userId = document.getElementById('cardUserId').value;
+    const cardCompany = document.getElementById('cardCompany').value;
+    const cardNumber = document.getElementById('cardNumber').value;
+
+    clearModal();
+    eduModal.show();
+
+    document.getElementById('userExperienceContent').innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary mb-3"></div>
+            <h4>카드 등록 중...</h4>
+            <p class="text-muted">카드사 서버에 정보를 저장하고 있습니다.</p>
+        </div>
+    `;
+
+    const res = await callApi('POST', '/api/v1/cards', {
+        userId,
+        cardCompany,
+        cardNumber
+    });
+
+    if(res.status !== 200 && res.status !== 201){
+        return showError("카드 등록 실패");
+    }
+
+    document.getElementById('userExperienceContent').innerHTML = `
+        <div class="text-success">
+            <i class="bi bi-credit-card-fill display-1"></i>
+        </div>
+
+        <h4 class="fw-bold mt-3">
+            카드 등록 완료
+        </h4>
+
+        <p class="text-muted">
+            카드 정보가 안전하게 저장되었습니다.
+        </p>
+
+        <div class="alert alert-success mt-3">
+            카드사 : ${res.data.data.cardCompany}<br>
+            카드번호 : ${res.data.data.maskedCardNumber}<br>
+            상태 : ACTIVE
+        </div>
+    `;
+}
+
+async function getCompanyCards() {
+    const userId = document.getElementById('cardSearchUserId').value;
+    const resultBox = document.getElementById('companyCardResult');
+
+    const res = await fetch(`/api/v1/cards/company/${userId}`);
+    const data = await res.json();
+
+    const cards = data.data || [];
+
+    resultBox.innerHTML = cards.map(card => `
+        <div class="alert alert-success">
+            <b>카드사 등록 확인 완료</b><br>
+            카드 ID: #${card.cardId}<br>
+            카드사: ${card.cardCompany}<br>
+            카드번호: ${card.maskedCardNumber}<br>
+            등록일시: ${card.createdAt}
+        </div>
+    `).join('');
+}
+
 function changeRoleView() {
     const role = document.getElementById('roleSelector').value;
 
