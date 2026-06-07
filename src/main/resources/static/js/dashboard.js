@@ -88,34 +88,52 @@ async function startPurchaseFlow(itemId, price) {
     clearModal();
     eduModal.show();
 
-    // RSA 키 자동 생성
-    await callApi('POST', '/api/v1/users/1/keys');
-    await callApi('POST', '/api/v1/users/2/keys');
+    try {
+        // 1. RSA 키 자동 생성
+        await callApi('POST', '/api/v1/users/1/keys');
+        await callApi('POST', '/api/v1/users/2/keys');
 
-    const tradeRes = await callApi('POST', '/api/v1/trades', {
-        buyerId: 1,
-        sellerId: 2,
-        itemId: itemId,
-        price: price
-    });
-    if (tradeRes.status !== 200) return showError('거래 생성에 실패했습니다.');
-    currentTradeId = tradeRes.data.data.tradeId;
+        // 2. 거래 생성
+        const tradeRes = await callApi('POST', '/api/v1/trades', {
+            buyerId: 1,
+            sellerId: 2,
+            itemId: itemId,
+            price: price
+        });
+        if (tradeRes.status !== 200) return showError('거래 생성에 실패했습니다.');
+        currentTradeId = tradeRes.data.data.tradeId;
 
-    const verifyRes = await callApi('PATCH', `/api/v1/trades/${currentTradeId}/verify`);
+        // 3. 보안 검증 (해시/서명)
+        const verifyRes = await callApi('PATCH', `/api/v1/trades/${currentTradeId}/verify`);
+        if (verifyRes.status !== 200) return showError('보안 검증에 실패했습니다.');
 
-    if (verifyRes.status !== 200) return showError('검증에 실패했습니다.');
+        // 4. 결제 진행
+        const payRes = await callApi('POST', '/api/v1/payments', {
+            tradeId: currentTradeId,
+            cardId: 1, // 테스트용 기본 카드
+            amount: price
+        });
 
-    document.getElementById('userExperienceContent').innerHTML = `
-        <div class="text-success"><i class="bi bi-check-circle-fill display-1"></i></div>
-        <h4 class="fw-bold mt-3">검증 완료!</h4>
-        <p class="text-muted">전자봉투 복호화, 해시 무결성 검증, 전자서명 검증이 완료되었습니다.</p>
-    `;
+        if (payRes.status !== 200) return showError('결제 처리 중 오류가 발생했습니다.');
 
-    setSecurityInsight(
-        "전자봉투 검증 성공",
-        "AES 복호화, SHA-256 해시 검증, RSA 전자서명 검증이 정상적으로 수행되었습니다.",
-        "해당 없음"
-    );
+        document.getElementById('userExperienceContent').innerHTML = `
+            <div class="text-success"><i class="bi bi-check-circle-fill display-1"></i></div>
+            <h4 class="fw-bold mt-3">거래 및 결제 완료!</h4>
+            <p class="text-muted">보안 검증, 결제, 아이템 소유권 이전이 모두 성공적으로 처리되었습니다.</p>
+            <div class="alert alert-success small mt-2">
+                결제 번호: #${payRes.data.data.paymentId}<br>
+                거래 상태: COMPLETED (완료)
+            </div>
+        `;
+
+        setSecurityInsight(
+            "전체 거래 프로세스 성공",
+            "AES CBC 복호화, SHA-256 무결성 검증, RSA 전자서명 검증 및 결제 후 자동 소유권 이전이 완료되었습니다.",
+            "해당 없음"
+        );
+    } catch (error) {
+        showError('시스템 오류가 발생했습니다: ' + error.message);
+    }
 }
 
 // 공격: 검증 건너뛰기

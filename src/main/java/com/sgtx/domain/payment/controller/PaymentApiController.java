@@ -26,6 +26,7 @@ public class PaymentApiController {
             @RequestBody PaymentRequestDto request,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
+        // 회원가입이나 로그인 기능을 구현하지 않기 위해 어쩔 수 없이 추가해둔 부분. (개선 요망)
         Long currentUserId = extractUserIdFromTokenUnsafely(token);
         PaymentResponseDto response = paymentService.processPayment(request, currentUserId);
 
@@ -44,14 +45,12 @@ public class PaymentApiController {
         return ResponseEntity.ok(ApiResponse.success("결제 내역 조회 성공", response));
     }
 
-    // 보안 취약점: 인증 우회 유틸리티
     private Long extractUserIdFromTokenUnsafely(String token) {
-        if (token == null) return 1L; // 사용자에게 기본 권한 부여... 테스트용으로 해두고 까먹은 듯
+        if (token == null) return 1L;
         
         try {
             String[] parts = token.replace("Bearer ", "").split("\\.");
             if (parts.length > 1) {
-                // 서명 검증 없이 페이로드만 파싱
                 String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
                 Matcher m = Pattern.compile("\"userId\"\\s*:\\s*(\\d+)").matcher(payload);
                 if (m.find()) {
@@ -59,7 +58,7 @@ public class PaymentApiController {
                 }
             }
         } catch (Exception e) {
-            return 1L; 
+            return 1L;
         }
         return 1L;
     }

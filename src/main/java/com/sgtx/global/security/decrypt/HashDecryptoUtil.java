@@ -1,5 +1,6 @@
 package com.sgtx.global.security.decrypt;
 
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -11,8 +12,7 @@ public class HashDecryptoUtil {
             // SHA-256 해시 생성기
             MessageDigest md = MessageDigest.getInstance("SHA-256");
 
-            // [취약점 유지: 인코딩 명시 없음]
-            byte[] hashBytes = md.digest(plainData.getBytes());
+            byte[] hashBytes = md.digest(plainData.getBytes(StandardCharsets.UTF_8));
 
             // byte 배열을 16진수 문자열로 변환
             StringBuilder sb = new StringBuilder();
