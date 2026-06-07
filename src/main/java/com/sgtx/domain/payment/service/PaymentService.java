@@ -65,6 +65,12 @@ public class PaymentService {
 
         // 거래 상태 업데이트
         trade.setStatus(TradeStatus.COMPLETED);
+        
+        // [수정: 문제점 1 해결] 아이템 소유권 이전 로직 추가
+        if (trade.getItem() != null) {
+            trade.getItem().setOwner(trade.getBuyer());
+        }
+        
         tradeRepository.save(trade);
 
         return PaymentResponseDto.builder()
