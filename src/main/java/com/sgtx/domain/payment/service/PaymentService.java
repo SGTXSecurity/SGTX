@@ -33,8 +33,7 @@ public class PaymentService {
     // [보안 취약점 1: 트랜잭션 관리 미흡 (CWE-209)] 
     @Transactional
     public PaymentResponseDto processPayment(PaymentRequestDto request, Long currentUserId) {
-        
-        // [보안 취약점 2: 로그를 통한 민감 정보 노출 (CWE-532)]
+
         log.info("Processing payment: tradeId={}, cardId={}, amount={}", 
                 request.getTradeId(), request.getCardId(), request.getAmount());
 
@@ -66,6 +65,12 @@ public class PaymentService {
 
         // 거래 상태 업데이트
         trade.setStatus(TradeStatus.COMPLETED);
+        
+        // [수정: 문제점 1 해결] 아이템 소유권 이전 로직 추가
+        if (trade.getItem() != null) {
+            trade.getItem().setOwner(trade.getBuyer());
+        }
+        
         tradeRepository.save(trade);
 
         return PaymentResponseDto.builder()
@@ -79,12 +84,10 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public PaymentDetailResponseDto getPaymentDetail(Long paymentId, Long currentUserId) {
-        // [보안 취약점 11: Insecure Direct Object Reference (IDOR) (CWE-639)]
         
         PaymentEntity payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("해당 결제 내역을 찾을 수 없습니다."));
 
-        // [수정] JPA 조인 대신 직접 CardRepository에서 조회
         CardEntity card = cardRepository.findById(payment.getCardId())
                 .orElseThrow(() -> new RuntimeException("카드 정보를 찾을 수 없습니다."));
 

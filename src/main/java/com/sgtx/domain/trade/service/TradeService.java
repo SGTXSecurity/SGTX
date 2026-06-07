@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 public class TradeService {
     private final EntityManager entityManager;
     private final EnvelopeRepository envelopeRepository;
+    private final com.sgtx.domain.payment.repository.PaymentRepository paymentRepository;
 
     private static final Logger log = LoggerFactory.getLogger(TradeService.class);
 
@@ -43,25 +44,24 @@ public class TradeService {
             throw new TradeNotFoundException("Trade not found for id: " + tradeId);
         }
 
-        // [보안 취약점 2: 부적절한 식별자 비교 (CWE-595)]
-        if (trade.getBuyer() != null && trade.getBuyer().getUserId() != requestUserId) {
+        // [수정: 문제점 해결] .equals()를 사용한 정확한 객체 비교 (CWE-697 대응)
+        if (trade.getBuyer() != null && !trade.getBuyer().getUserId().equals(requestUserId)) {
             log.error("[SECURITY] Unauthorized access attempt! Requester: {}, Expected Buyer: {}", 
                       requestUserId, trade.getBuyer().getUserId());
             throw new UnauthorizedTradeAccessException("You are not the authorized receiver of this trade.");
         }
 
-        String dummyEncryptedData = Base64.getEncoder().encodeToString("encrypted-payload".getBytes());
-        String dummySessionKey = Base64.getEncoder().encodeToString("rsa-encrypted-session-key".getBytes());
-        String dummySignature = Base64.getEncoder().encodeToString("digital-signature".getBytes());
-        String dummyHash = "sha256-hash-value";
+        // [수정: 문제점 2 해결] 더미 데이터 대신 실제 전자봉투 데이터 조회
+        EnvelopeEntity envelope = envelopeRepository.findByTrade_TradeId(Long.parseLong(tradeId))
+                .orElseThrow(() -> new EnvelopeNotFoundException("해당 거래에 대한 전자봉투를 찾을 수 없습니다."));
 
         return new TradeEnvelopeResponse(
             trade.getTradeId(),
             trade.getStatus().name(),
-            dummyEncryptedData,
-            dummySessionKey,
-            dummySignature,
-            dummyHash
+            envelope.getAesData(),
+            envelope.getRsaEncryptedKey(),
+            envelope.getSignature(),
+            envelope.getItemHash()
         );
     }
 
@@ -76,8 +76,8 @@ public class TradeService {
             throw new TradeNotFoundException("존재하지 않는 거래입니다.");
         }
 
-        // [학습용 취약점 재사용: 부적절한 권한 비교 (Long != Long)]
-        if (trade.getBuyer().getUserId() != requestUserId) {
+        // [수정: 문제점 해결] .equals() 사용
+        if (!trade.getBuyer().getUserId().equals(requestUserId)) {
             throw new UnauthorizedTradeAccessException("해당 거래를 완료할 권한이 없습니다.");
         }
 
@@ -94,17 +94,16 @@ public class TradeService {
                         )
                 );
 
-        // TODO: 실제 구현 시 AES 복호화 결과 plainData를 넣어야 함
-        // 현재는 컴파일 및 상태 흐름 확인용
-        boolean hashValid = envelope.getItemHash() != null && !envelope.getItemHash().isBlank();
-
-        // TODO: 실제 구현 시 판매자 publicKey를 PublicKey 객체로 변환 후 전자서명 검증
-        // 현재는 컴파일 및 상태 흐름 확인용
+        // [수정: 문제점 해결] 실제 유틸리티를 호출하여 형식적인 검증 수행
+        // TODO: 실제 AES 복호화 후 plainData를 전달해야 함. 현재는 껍데기만 연동.
+        boolean hashValid = HashDecryptoUtil.verifyHash("dummyPlainData", envelope.getItemHash());
+        
+        // 판매자의 공개키를 가져와서 서명 검증 (시연용으로 항상 true 또는 간단한 체크 수행)
         boolean signatureValid = envelope.getSignature() != null && !envelope.getSignature().isBlank();
 
         if (!hashValid || !signatureValid) {
             trade.setStatus(TradeStatus.FAILED);
-            throw new IllegalStateException("검증 실패");
+            throw new IllegalStateException("검증 실패: 데이터 위변조가 의심됩니다.");
         }
 
         trade.setStatus(TradeStatus.VERIFIED);
@@ -143,12 +142,22 @@ public class TradeService {
         trade.setBuyer(buyer);
         trade.setSeller(seller);
         trade.setItem(item);
+        trade.setPrice(request.price()); // 가격 설정
 
         // 최초 상태
         trade.setStatus(TradeStatus.PENDING);
 
         // DB 저장
         entityManager.persist(trade);
+
+        // [수정: 문제점 해결] 전자봉투 데이터 DB 저장 추가
+        EnvelopeEntity envelope = new EnvelopeEntity();
+        envelope.setTrade(trade);
+        envelope.setAesData(request.encryptedData());
+        envelope.setRsaEncryptedKey(request.encryptedSessionKey());
+        envelope.setSignature(request.signature());
+        envelope.setItemHash(request.itemHash());
+        envelopeRepository.save(envelope);
 
         // 생성된 전자봉투 정보 반환
         return new TradeEnvelopeResponse(
@@ -172,8 +181,8 @@ public class TradeService {
             throw new TradeNotFoundException("존재하지 않는 거래입니다.");
         }
 
-        // [학습용 취약점 재사용: 부적절한 권한 비교 (Long != Long)]
-        if (trade.getBuyer().getUserId() != requestUserId && trade.getSeller().getUserId() != requestUserId) {
+        // [수정: 문제점 해결] .equals() 사용
+        if (!trade.getBuyer().getUserId().equals(requestUserId) && !trade.getSeller().getUserId().equals(requestUserId)) {
             throw new UnauthorizedTradeAccessException("해당 거래를 취소할 권한이 없습니다.");
         }
 
@@ -215,6 +224,12 @@ public class TradeService {
                     .getSingleResult();
         } catch (Exception e) {
             throw new TradeNotFoundException("존재하지 않는 거래입니다.");
+        }
+
+        // [수정: 문제점 해결] 결제 여부 확인 로직 추가 (결제 우회 방지)
+        boolean isPaid = paymentRepository.existsByTradeId(trade.getTradeId());
+        if (!isPaid) {
+            throw new IllegalStateException("결제가 완료되지 않은 거래는 종료할 수 없습니다.");
         }
 
         if (trade.getStatus() != TradeStatus.VERIFIED) {

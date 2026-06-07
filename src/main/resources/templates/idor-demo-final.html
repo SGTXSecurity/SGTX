@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SGTX 보안 취약점 진단 및 시뮬레이션</title>
+    <style>
+        body { 
+            background-color: #ffffff; 
+            color: #000000; 
+            font-family: 'Malgun Gothic', monospace; 
+            padding: 20px; 
+            line-height: 1.5;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+        }
+        .panel { 
+            border: 1px solid #000000; 
+            padding: 20px; 
+            margin-bottom: 20px; 
+        }
+        .panel-header {
+            font-weight: bold;
+            border-bottom: 1px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        .config-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        select, input[type="number"], button {
+            font-family: inherit;
+            padding: 5px;
+            border: 1px solid #000000;
+            background: #ffffff;
+            color: #000000;
+        }
+        button {
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        button:hover {
+            background: #000000;
+            color: #ffffff;
+        }
+        .log-area { 
+            border: 1px solid #000000; 
+            padding: 10px; 
+            height: 150px; 
+            overflow-y: auto; 
+            background: #f9f9f9;
+            font-size: 13px;
+        }
+        .result-area {
+            border: 1px solid #000000;
+            padding: 15px;
+            min-height: 200px;
+        }
+        .data-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 120px;
+        }
+        .status-indicator {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div style="text-align: center; margin-bottom: 30px; font-weight: bold; font-size: 1.5em;">
+        SGTX IDOR 취약점 시뮬레이션
+    </div>
+
+    <!-- 1. 보안 환경 설정 패널 (버튼 제거 및 상태 고정) -->
+    <div class="panel">
+        <div class="panel-header">[시스템 설정]</div>
+        <div class="config-row">
+            <div>
+                인가 검증 필터 상태: 
+                <span class="status-indicator">비활성화 (취약)</span>
+            </div>
+        </div>
+        <div style="font-size: 0.9em; margin-top: 10px;">
+            * 현재 서버는 요청자의 소유권 검증 로직이 적용되지 않은 상태입니다.
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 20px;">
+        <!-- 2. 공격 시도 패널 -->
+        <div class="panel" style="flex: 1;">
+            <div class="panel-header">[공격 시뮬레이션]</div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">현재 접속 계정:</label>
+                <select id="userType" style="width: 100%;">
+                    <option value="999">해커 (사용자 ID: 999)</option>
+                    <option value="1">일반 사용자 (사용자 ID: 1)</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px;">조회 대상 영수증 번호:</label>
+                <input type="number" id="targetId" value="1" style="width: 100%; box-sizing: border-box;">
+                <div style="font-size: 0.8em; margin-top: 5px;">* 1번 영수증은 사용자 ID 1의 소유입니다.</div>
+            </div>
+            
+            <button onclick="runSimulation()">API 요청 실행</button>
+            
+            <div style="margin-top: 20px;">
+                <div style="margin-bottom: 5px; font-weight: bold;">[네트워크 로그]</div>
+                <div class="log-area" id="apiLog">
+                    대기 중...
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 결과 화면 패널 -->
+        <div class="panel" style="flex: 1;">
+            <div class="panel-header">[응답 데이터]</div>
+            <div class="result-area" id="resultContent">
+                요청 대기 중...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function runSimulation() {
+        const userId = document.getElementById('userType').value;
+        const targetId = document.getElementById('targetId').value;
+        const log = document.getElementById('apiLog');
+        const resultContent = document.getElementById('resultContent');
+
+        // 보안 패치 버튼이 제거되었으므로 항상 취약한 상태(isSecure = false)로 동작
+        const isSecure = false;
+
+        log.innerHTML = `> 송신: GET /api/v1/payments/${targetId}<br>> 인증: Bearer Token (사용자ID: ${userId})<br>> 처리 중...`;
+        resultContent.innerHTML = "서버와 통신 중...";
+
+        setTimeout(() => {
+            if (isSecure && targetId === "1" && userId === "999") {
+                // 이 분기는 현재 도달하지 않음 (항상 취약 상태)
+                log.innerHTML += `<br>> 수신: HTTP 403 FORBIDDEN`;
+                resultContent.innerHTML = `
+                    <div style="text-align: center; margin-top: 50px;">
+                        <h2 style="font-weight: bold;">접근 거부</h2>
+                        <p>HTTP 상태 코드 403</p>
+                        <p>권한 검증 실패. 해당 리소스의 소유자가 아닙니다.</p>
+                    </div>`;
+            } else {
+                log.innerHTML += `<br>> 수신: HTTP 200 OK`;
+                
+                const isLeaked = (userId === "999" && targetId === "1");
+                const statusText = isLeaked 
+                    ? "[경고] 타인 데이터 유출 감지" 
+                    : "[정보] 정상 응답";
+
+                resultContent.innerHTML = `
+                    <div style="margin-bottom: 20px; font-weight: bold; border-bottom: 1px dashed #000; padding-bottom: 10px;">
+                        ${statusText}
+                    </div>
+                    <div>
+                        <span class="data-label">결제 상태:</span> 성공 (SUCCESS)<br>
+                        <span class="data-label">결제 금액:</span> 50,000 KRW<br>
+                        <br>
+                        <span class="data-label">카드사:</span> 국민카드 (비자)<br>
+                        <span class="data-label">카드번호:</span> 4518-****-****-1234
+                    </div>
+                `;
+            }
+        }, 800);
+    }
+</script>
+
+</body>
+</html>
