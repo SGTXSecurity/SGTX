@@ -49,9 +49,9 @@ public class PaymentApiController {
         return ResponseEntity.ok(ApiResponse.success("결제 내역 조회 성공", response));
     }
 
-    // [보안 취약점 8: 인증 우회 유틸리티 (CWE-306)]
+    // 보안 취약점: 인증 우회 유틸리티
     private Long extractUserIdFromTokenUnsafely(String token) {
-        if (token == null) return 1L; // Fallback: 익명 사용자에게 기본 권한 부여
+        if (token == null) return 1L; // 사용자에게 기본 권한 부여... 테스트용으로 해두고 까먹은 듯
         
         try {
             String[] parts = token.replace("Bearer ", "").split("\\.");

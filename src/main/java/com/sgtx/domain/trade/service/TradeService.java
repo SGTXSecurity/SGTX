@@ -32,7 +32,7 @@ public class TradeService {
 
     @Transactional
     public TradeEnvelopeResponse getTradeEnvelope(String tradeId, Long requestUserId) {
-        // [보안 취약점 1: SQL Injection (CWE-89)]
+        // 보안 취약점 1: SQL Injection
         String sql = "SELECT * FROM trades t WHERE t.trade_id = " + tradeId;
         Query query = entityManager.createNativeQuery(sql, TradeEntity.class);
         

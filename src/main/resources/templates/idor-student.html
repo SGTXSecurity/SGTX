@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SGTX - 마이페이지 (영수증 조회)</title>
+    <!-- 단순한 스타일링 -->
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f9f9f9; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border: 1px solid #ccc; }
+        .box { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; background-color: #fff; }
+        h1, h2 { color: #333; }
+        button { padding: 8px 15px; cursor: pointer; }
+        input[type="text"] { padding: 8px; width: 100px; }
+        
+        /* 해커 모드 토글용 */
+        .hacker-controls { background-color: #ffebee; border-left: 4px solid #f44336; }
+        
+        pre { background: #eee; padding: 10px; overflow-x: auto; font-size: 12px;}
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>결제 내역 조회 테스트</h1>
+    <p>개발 테스트용 페이지입니다.</p>
+
+    <!-- 사용자 컨트롤 패널 -->
+    <div class="box">
+        <h3>1. 현재 세션 설정 (테스트용)</h3>
+        <p>현재 접속한 사용자를 선택하세요.</p>
+        <select id="currentUser">
+            <option value="user1">User 1 (일반 사용자)</option>
+            <option value="user999">User 999 (해커/악의적 사용자)</option>
+        </select>
+    </div>
+
+    <!-- 데이터 요청 패널 -->
+    <div class="box hacker-controls">
+        <h3>2. API 요청 (IDOR 취약점 테스트)</h3>
+        <p>조회할 영수증 번호(Payment ID)를 입력하세요.</p>
+        
+        <label for="paymentId">영수증 번호:</label>
+        <input type="text" id="paymentId" value="1">
+        <button onclick="fetchPaymentDetail()">조회하기</button>
+        <br><br>
+        <small>※ 참고: 1번 영수증은 User 1의 데이터입니다.</small>
+    </div>
+
+    <!-- 결과 출력 화면 -->
+    <div class="box" id="resultBox" style="display:none;">
+        <h2>조회 결과</h2>
+        
+        <div id="receiptData" style="display:none;">
+            <p><strong>결제 상태:</strong> <span id="resStatus"></span></p>
+            <p><strong>결제 금액:</strong> <span id="resAmount"></span>원</p>
+            <p style="color:red;"><strong>카드사:</strong> <span id="resCardComp"></span></p>
+            <p style="color:red;"><strong>카드번호:</strong> <span id="resCardNum"></span></p>
+        </div>
+        
+        <p id="errorMsg" class="error" style="display:none;"></p>
+        
+        <hr>
+        <h4>API 응답 Raw Data:</h4>
+        <pre id="rawData"></pre>
+    </div>
+</div>
+
+<script>
+    // 가상의 DB 역할 (서버 흉내)
+    const mockDatabase = {
+        "1": { 
+            paymentId: 1, 
+            ownerId: "user1", 
+            amount: 50000, 
+            status: "SUCCESS", 
+            cardInfo: { cardCompany: "비자카드", cardNumber: "1234-****-****-5678" } 
+        },
+        "2": { 
+            paymentId: 2, 
+            ownerId: "user2", 
+            amount: 15000, 
+            status: "SUCCESS", 
+            cardInfo: { cardCompany: "마스터카드", cardNumber: "9876-****-****-4321" } 
+        }
+    };
+
+    function fetchPaymentDetail() {
+        // UI 초기화
+        document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('receiptData').style.display = 'none';
+        document.getElementById('errorMsg').style.display = 'none';
+        document.getElementById('rawData').textContent = "로딩중...";
+
+        // 입력값 가져오기
+        const requestedPaymentId = document.getElementById('paymentId').value;
+        const currentSessionUser = document.getElementById('currentUser').value;
+
+        // == 서버 로직 시뮬레이션 시작 ==
+        setTimeout(() => {
+            const data = mockDatabase[requestedPaymentId];
+
+            if (!data) {
+                showError("해당 영수증을 찾을 수 없습니다. (404 Not Found)", null);
+                return;
+            }
+
+            // [핵심 취약점] 권한 검증 로직 누락!
+            // 정상적인 코드라면 아래 주석처럼 소유자를 확인해야 합니다.
+            /* 
+            if (data.ownerId !== currentSessionUser) {
+                showError("권한이 없습니다. (403 Forbidden)", data);
+                return;
+            }
+            */
+
+            // 검증 없이 무조건 데이터 반환
+            showSuccess(data);
+
+        }, 500); // 0.5초 지연으로 API 느낌 주기
+    }
+
+    function showSuccess(data) {
+        document.getElementById('receiptData').style.display = 'block';
+        
+        document.getElementById('resStatus').textContent = data.status;
+        document.getElementById('resAmount').textContent = data.amount.toLocaleString();
+        document.getElementById('resCardComp').textContent = data.cardInfo.cardCompany;
+        document.getElementById('resCardNum').textContent = data.cardInfo.cardNumber;
+        
+        document.getElementById('rawData').textContent = JSON.stringify(data, null, 2);
+    }
+
+    function showError(msg, data) {
+        document.getElementById('errorMsg').style.display = 'block';
+        document.getElementById('errorMsg').textContent = msg;
+        
+        if (data) {
+            document.getElementById('rawData').textContent = "거부된 데이터: " + JSON.stringify(data);
+        } else {
+             document.getElementById('rawData').textContent = "데이터 없음";
+        }
+    }
+</script>
+
+</body>
+</html>
