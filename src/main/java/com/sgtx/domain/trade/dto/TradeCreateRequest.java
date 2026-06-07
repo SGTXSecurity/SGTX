@@ -6,6 +6,7 @@ public record TradeCreateRequest(
         Long buyerId,
         Long sellerId,
         Long itemId,
+        Integer price,
 
         // AES 암호화 거래 문서
         String encryptedData,
