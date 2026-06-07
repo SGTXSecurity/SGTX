@@ -24,7 +24,7 @@ public class CardController {
 
     private final CardService cardService;
 
-    // 카드 등록 Psost
+    // 카드 등록 (소비자 전용)
     @PostMapping
     public ApiResponse<CardRegisterResponse> registerCard(
             @RequestBody CardRegisterRequest request
@@ -38,17 +38,27 @@ public class CardController {
         );
     }
 
-    // 사용자별 등록 카드 목록 조회
-    @GetMapping("/{userId}")
-    public ApiResponse<List<CardResponse>> getCards(
+    // 소비자용: 내가 등록한 카드 목록 조회
+    @GetMapping("/user/{userId}")
+    public ApiResponse<List<CardResponse>> getUserCards(
             @PathVariable Long userId
     ) {
-        List<CardResponse> response = cardService.getCards(userId);
-
         return new ApiResponse<>(
                 200,
-                "등록된 카드 목록 조회 성공",
-                response
+                "소비자 카드 조회 성공",
+                cardService.getCards(userId)
+        );
+    }
+
+    // 카드사용: 카드 정보 조회
+    @GetMapping("/company/{userId}")
+    public ApiResponse<List<CardResponse>> getCompanyCards(
+            @PathVariable Long userId
+    ) {
+        return new ApiResponse<>(
+                200,
+                "카드사 카드 조회 성공",
+                cardService.getCards(userId)
         );
     }
 }

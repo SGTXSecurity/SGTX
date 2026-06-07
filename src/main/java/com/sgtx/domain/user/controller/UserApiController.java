@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-//공개키 조회 (요청 / 응답)
+//공개키 조회 API (요청 / 응답)
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -14,6 +14,7 @@ public class UserApiController {
 
     private final UserService userService;
 
+    //공개키 조회
     @GetMapping("/{userId}/public-key")
     public ResponseEntity<PublicKeyResponse> getPublicKey(
             @PathVariable Long userId) {
@@ -23,6 +24,7 @@ public class UserApiController {
         );
     }
 
+    //RSA 키쌍 생성
     @PostMapping("/{userId}/keys")
     public ResponseEntity<String> generateKeys(
             @PathVariable Long userId

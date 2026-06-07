@@ -29,6 +29,7 @@ public class TradeApiController {
         );
     }
 
+    //거래 봉투 조회
     @GetMapping("/{tradeId}")
     public ResponseEntity<ApiResponse<TradeEnvelopeResponse>> getTrade(
             @PathVariable String tradeId,
@@ -48,24 +49,28 @@ public class TradeApiController {
         // [학습용 취약점 재사용: 부적절한 인증 검증]
         Long userId = extractUserIdFromTokenUnsafely(token);
 
+        //진짜 검증 버전
+        //Long userId = jwtUtil.extractUserId(token);
+
         TradeVerifyResponse response = tradeService.verifyTrade(tradeId, userId);
         return ResponseEntity.ok(ApiResponse.success("아이템 거래 및 소유권 이전 완료", response));
     }
 
+    //거래 취소
     @PatchMapping("/{tradeId}/cancel")
     public ResponseEntity<ApiResponse<TradeCancelResponse>> cancelTrade(
             @PathVariable String tradeId,
             @RequestBody TradeCancelRequest request,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
-        // [학습용 취약점 재사용: 부적절한 인증 검증]
+        // 요청 간별 함수
         Long userId = extractUserIdFromTokenUnsafely(token);
 
         TradeCancelResponse response = tradeService.cancelTradeForSecurity(tradeId, request.reason(), userId);
         return ResponseEntity.ok(ApiResponse.success("보안 검증 실패로 인해 거래가 즉시 중단 및 취소되었습니다.", response));
     }
 
-
+    //인증 우회 시연
     private Long extractUserIdFromTokenUnsafely(String token) {
         if (token == null) return 1L; // 폴백(Fallback) 계정: 최악의 보안 관행
         
@@ -86,3 +91,33 @@ public class TradeApiController {
         return 1L;
     }
 }
+
+/* JWT 유틸 예시
+@Component
+public class JwtUtil {
+
+    private final String SECRET_KEY =
+            "my-super-secret-key-my-super-secret-key";
+
+    public Long extractUserId(String token) {
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("인증 토큰이 없습니다.");
+        }
+
+        String jwt = token.replace("Bearer ", "");
+
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(
+                        Keys.hmacShaKeyFor(
+                                SECRET_KEY.getBytes(StandardCharsets.UTF_8)
+                        )
+                )
+                .build()
+                .parseClaimsJws(jwt)
+                .getBody();
+
+        return claims.get("userId", Long.class);
+    }
+}
+ */

@@ -133,16 +133,24 @@
         <a class="navbar-brand fw-bold" href="#" style="color: var(--primary-blue);">
             <i class="bi bi-shield-check"></i> SGTX 보안 아이템 거래
         </a>
+
         <div class="d-flex align-items-center gap-4">
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="hackerModeToggle" onchange="toggleHackerMode()">
-                <label class="form-check-label fw-bold" for="hackerModeToggle" style="font-size: 0.9rem;">개발자/해커 모드</label>
+                <label class="form-check-label fw-bold" for="hackerModeToggle" style="font-size: 0.9rem;">
+                    개발자/해커 모드
+                </label>
             </div>
+
             <div class="d-flex align-items-center">
-                <span class="me-2 small fw-bold">접속 계정:</span>
-                <select id="userSelector" class="form-select form-select-sm" style="width: 160px; border-radius: 6px;">
-                    <option value="user1">사용자 A (구매자)</option>
-                    <option value="user2">사용자 B (판매자)</option>
+                <span class="me-2 small fw-bold">역할:</span>
+                <select id="roleSelector"
+                        class="form-select form-select-sm"
+                        style="width: 140px; border-radius: 6px;"
+                        onchange="changeRoleView()">
+                    <option value="consumer">구매자</option>
+                    <option value="cardCompany">카드사</option>
+                    <option value="buyer">판매자</option>
                 </select>
             </div>
         </div>
@@ -171,6 +179,49 @@
 
 <!-- Main Content -->
 <div class="container">
+
+    <!-- 카드 등록/조회 영역 -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <div id="consumerCardSection">
+                <h5>💳 카드 등록 (소비자)</h5>
+
+                <input id="cardUserId"
+                       class="form-control mb-2"
+                       placeholder="사용자 ID">
+
+                <input id="cardCompany"
+                       class="form-control mb-2"
+                       placeholder="카드사">
+
+                <input id="cardNumber"
+                       class="form-control mb-2"
+                       placeholder="카드번호">
+
+                <button class="btn btn-primary"
+                        onclick="registerCard()">
+                    카드 등록
+                </button>
+            </div>
+
+            <div id="cardCompanySection" style="display:none;">
+                <h5>🏦 카드 정보 조회 (카드사)</h5>
+
+                <input id="cardSearchUserId"
+                       class="form-control mb-2"
+                       placeholder="조회할 사용자 ID">
+
+                <button class="btn btn-success"
+                        onclick="getCompanyCards()">
+                    카드 조회
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="itemSection">
     <h3 class="section-title">추천 아이템</h3>
     <div class="row g-4">
         <!-- Sample Item -->
@@ -211,6 +262,7 @@
                 </div>
             </div>
         </div>
+    </div>
                     
                     <!-- Malicious Actions -->
                     <div class="hacker-mode-section mt-4">

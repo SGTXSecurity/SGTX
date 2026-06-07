@@ -7,7 +7,6 @@ import com.sgtx.global.security.crypto.keyPairUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
 import java.security.KeyPair;
 import java.util.Base64;
 
@@ -24,16 +23,19 @@ public class UserService {
         return new PublicKeyResponse(user.getPublicKey());
     }
 
+    //키 생성(초ㅣ초 1회)
     @Transactional
     public void generateKeysIfAbsent(Long userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
+        // 최초 검사
         boolean hasRealKey =
                 user.getPublicKey() != null
                         && user.getPrivateKey() != null
                         && !user.getPublicKey().isBlank()
                         && !user.getPrivateKey().isBlank()
+                        //더미 키 검사(테스트 용)
                         && !user.getPublicKey().startsWith("RSA_PUBLIC_KEY")
                         && !user.getPrivateKey().startsWith("RSA_PRIVATE_KEY");
 
