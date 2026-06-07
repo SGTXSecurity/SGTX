@@ -13,6 +13,7 @@ import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//결제 API 명세
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
@@ -27,7 +28,6 @@ public class PaymentApiController {
 
         // 회원가입이나 로그인 기능을 구현하지 않기 위해 어쩔 수 없이 추가해둔 부분. (개선 요망)
         Long currentUserId = extractUserIdFromTokenUnsafely(token);
-
         PaymentResponseDto response = paymentService.processPayment(request, currentUserId);
 
         return ResponseEntity.ok(ApiResponse.success("결제가 성공적으로 완료되었습니다.", response));

@@ -11,7 +11,6 @@ public class HashUtil {
     // 거래 데이터의 위조 여부를 확인하기 위해 사용
         MessageDigest md = MessageDigest.getInstance("SHA-256");
 
-        // [보안 취약점: 문자 인코딩 명시 없음]
         // getBytes()는 실행 환경의 기본 인코딩을 사용한다.
         byte[] hashBytes = md.digest(data.getBytes());
 

@@ -34,7 +34,7 @@ public class CardService {
         CardEntity card = new CardEntity();
         card.setUser(user);
         card.setCardCompany(request.cardCompany());
-        // 원본 카드번호는 저장하지 않고 마스킹된 값만 저장
+        //마스킹된 값만 저장
         card.setMaskedCardNumber(maskCardNumber(request.cardNumber()));
         card.setCardStatus(CardStatus.ACTIVE);
 
@@ -67,7 +67,7 @@ public class CardService {
                 .toList();
     }
 
-    // 카드번호를 1234-****-****-5678 형식으로 마스킹
+    // 카드번호 마스킹
     private String maskCardNumber(String cardNumber) {
         String digits = cardNumber == null ? "" : cardNumber.replaceAll("\\D", "");
         if (digits.length() < 8) {
