@@ -32,6 +32,10 @@ public class UserEntity {
     @Column(name = "public_key", nullable = false)
     private String publicKey;
 
+    @Lob
+    @Column(name = "private_key")
+    private String privateKey;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

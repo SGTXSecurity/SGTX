@@ -10,9 +10,11 @@ import com.sgtx.domain.user.entity.UserEntity;
 import com.sgtx.global.exception.EnvelopeNotFoundException;
 import com.sgtx.global.exception.TradeNotFoundException;
 import com.sgtx.global.exception.UnauthorizedTradeAccessException;
-import com.sgtx.global.security.decrypt.HashDecryptoUtil;
-import com.sgtx.global.security.decrypt.SignatureDecryptoUtil;
+import javax.crypto.SecretKey;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import com.sgtx.domain.payment.repository.PaymentRepository;
+import com.sgtx.global.security.crypto.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.springframework.stereotype.Service;
@@ -90,23 +92,41 @@ public class TradeService {
 
         EnvelopeEntity envelope = envelopeRepository
                 .findByTrade_TradeId(Long.parseLong(tradeId))
-                .orElseThrow(() ->
-                        new EnvelopeNotFoundException(
-                                "전자봉투를 찾을 수 없습니다."
-                        )
-                );
+                .orElseThrow(() -> new EnvelopeNotFoundException("전자봉투를 찾을 수 없습니다."));
 
-        // [수정: 문제점 해결] 실제 유틸리티를 호출하여 형식적인 검증 수행
-        boolean hashValid = HashDecryptoUtil.verifyHash("dummyPlainData", envelope.getItemHash());
-        
-        boolean signatureValid = envelope.getSignature() != null && !envelope.getSignature().isBlank();
+        try {
+            // 1. RSA 개인키로 AES 세션키 복호화 (수신자: 구매자의 개인키 사용)
+            UserEntity buyer = trade.getBuyer();
+            if (buyer.getPrivateKey() == null) {
+                throw new IllegalStateException("구매자의 개인키가 존재하지 않아 복호화할 수 없습니다.");
+            }
+            java.security.PrivateKey buyerPrivateKey = com.sgtx.global.security.crypto.keyPairUtil.getPrivateKeyFromString(buyer.getPrivateKey());
+            javax.crypto.SecretKey aesKey = com.sgtx.global.security.decrypt.RsaDecryptoUtil.decryptAesKey(envelope.getRsaEncryptedKey(), buyerPrivateKey);
 
-        if (!hashValid || !signatureValid) {
-            trade.setStatus(TradeStatus.FAILED);
-            throw new IllegalStateException("검증 실패: 데이터 위변조가 의심됩니다.");
+            // 2. AES 세션키로 암호화된 데이터 복호화
+            String plainData = com.sgtx.global.security.decrypt.AesDecryptoUtil.decrypt(envelope.getAesData(), aesKey);
+
+            // 3. 해시 검증 (무결성 확인)
+            boolean hashValid = com.sgtx.global.security.decrypt.HashDecryptoUtil.verifyHash(plainData, envelope.getItemHash());
+
+            // 4. 전자서명 검증 (발신자: 판매자의 공개키 사용)
+            UserEntity seller = trade.getSeller();
+            java.security.PublicKey sellerPublicKey = com.sgtx.global.security.crypto.keyPairUtil.getPublicKeyFromString(seller.getPublicKey());
+            boolean signatureValid = com.sgtx.global.security.decrypt.SignatureDecryptoUtil.verifySignature(envelope.getItemHash(), envelope.getSignature(), sellerPublicKey);
+
+            if (!hashValid || !signatureValid) {
+                log.error("🚨 [SECURITY BREACH] 위변조 감지! Hash Valid: {}, Signature Valid: {}", hashValid, signatureValid);
+                trade.setStatus(TradeStatus.FAILED);
+                throw new IllegalStateException("검증 실패: 데이터 위변조 또는 서명 불일치가 감지되었습니다.");
+            }
+
+            log.info("✅ [SECURITY VERIFIED] Trade ID {} 무결성 및 서명 검증 완료.", trade.getTradeId());
+            trade.setStatus(TradeStatus.VERIFIED);
+
+        } catch (Exception e) {
+            log.error("❌ [ERROR] 검증 처리 중 오류 발생: {}", e.getMessage());
+            throw new IllegalStateException("검증 과정에서 기술적 오류가 발생했습니다: " + e.getMessage());
         }
-
-        trade.setStatus(TradeStatus.VERIFIED);
 
         return new TradeVerifyResponse(
                 trade.getTradeId(),
@@ -141,32 +161,72 @@ public class TradeService {
         trade.setBuyer(buyer);
         trade.setSeller(seller);
         trade.setItem(item);
+        trade.setPrice(request.price()); // 가격 설정
 
         // 최초 상태
         trade.setStatus(TradeStatus.PENDING);
 
         // DB 저장
         entityManager.persist(trade);
+        try {
+            String plainData =
+                    "tradeId=" + trade.getTradeId()
+                            + "|buyerId=" + buyer.getUserId()
+                            + "|sellerId=" + seller.getUserId()
+                            + "|itemId=" + item.getItemId()
+                            + "|itemName=" + item.getItemName()
+                            + "|price=" + trade.getPrice();
 
-        // [수정: 문제점 해결] 전자봉투 데이터 DB 저장 추가
-        EnvelopeEntity envelope = new EnvelopeEntity();
-        envelope.setTrade(trade);
-        envelope.setAesData(request.encryptedData());
-        envelope.setRsaEncryptedKey(request.encryptedSessionKey());
-        envelope.setSignature(request.signature());
-        envelope.setItemHash(request.itemHash());
-        envelopeRepository.save(envelope);
+            SecretKey aesKey = AesCryptoUtil.generateAesKey();
 
-        // 생성된 전자봉투 정보 반환
-        return new TradeEnvelopeResponse(
-                trade.getTradeId(),
-                trade.getStatus().name(),
-                trade.getPrice(),
-                request.encryptedData(),
-                request.encryptedSessionKey(),
-                request.signature(),
-                request.itemHash()
-        );
+            String encryptedData = AesCryptoUtil.encrypt(plainData, aesKey);
+
+            PublicKey buyerPublicKey =
+                    keyPairUtil.getPublicKeyFromString(
+                            buyer.getPublicKey()
+                    );
+
+            String encryptedSessionKey =
+                    RsaCryptoUtil.encryptAesKey(
+                            aesKey,
+                            buyerPublicKey
+                    );
+
+            String itemHash =
+                    HashUtil.generateSHA1(plainData);
+
+            if (seller.getPrivateKey() == null || seller.getPrivateKey().isBlank()) {
+                throw new IllegalStateException("판매자의 개인키가 없어 전자서명을 생성할 수 없습니다.");
+            }
+
+            PrivateKey sellerPrivateKey =
+                    keyPairUtil.getPrivateKeyFromString(seller.getPrivateKey());
+
+            String signature =
+                    SignatureUtil.createSignature(itemHash, sellerPrivateKey);
+
+            EnvelopeEntity envelope = new EnvelopeEntity();
+            envelope.setTrade(trade);
+            envelope.setAesData(encryptedData);
+            envelope.setRsaEncryptedKey(encryptedSessionKey);
+            envelope.setSignature(signature);
+            envelope.setItemHash(itemHash);
+
+            envelopeRepository.save(envelope);
+
+            return new TradeEnvelopeResponse(
+                    trade.getTradeId(),
+                    trade.getStatus().name(),
+                    trade.getPrice(),
+                    encryptedData,
+                    encryptedSessionKey,
+                    signature,
+                    itemHash
+            );
+
+        } catch (Exception e) {
+            throw new IllegalStateException("전자봉투 생성 중 오류가 발생했습니다: " + e.getMessage(), e);
+        }
     }
 
     @Transactional

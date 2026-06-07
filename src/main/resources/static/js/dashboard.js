@@ -88,23 +88,34 @@ async function startPurchaseFlow(itemId, price) {
     clearModal();
     eduModal.show();
 
+    // RSA 키 자동 생성
+    await callApi('POST', '/api/v1/users/1/keys');
+    await callApi('POST', '/api/v1/users/2/keys');
+
     const tradeRes = await callApi('POST', '/api/v1/trades', {
         buyerId: 1,
         sellerId: 2,
         itemId: itemId,
-        price: price,
-        encryptedData: "...",
-        encryptedSessionKey: "...",
-        signature: "...",
-        itemHash: "..."
+        price: price
     });
-
     if (tradeRes.status !== 200) return showError('거래 생성에 실패했습니다.');
     currentTradeId = tradeRes.data.data.tradeId;
 
     const verifyRes = await callApi('PATCH', `/api/v1/trades/${currentTradeId}/verify`);
 
     if (verifyRes.status !== 200) return showError('검증에 실패했습니다.');
+
+    document.getElementById('userExperienceContent').innerHTML = `
+        <div class="text-success"><i class="bi bi-check-circle-fill display-1"></i></div>
+        <h4 class="fw-bold mt-3">검증 완료!</h4>
+        <p class="text-muted">전자봉투 복호화, 해시 무결성 검증, 전자서명 검증이 완료되었습니다.</p>
+    `;
+
+    setSecurityInsight(
+        "전자봉투 검증 성공",
+        "AES 복호화, SHA-256 해시 검증, RSA 전자서명 검증이 정상적으로 수행되었습니다.",
+        "해당 없음"
+    );
 }
 
 // 공격: 검증 건너뛰기
@@ -115,9 +126,7 @@ async function forcePayment() {
     // 1. 거래 생성
     document.getElementById('userExperienceContent').innerHTML = '<h6>[해커] 거래 생성 중...</h6>';
     const tradeRes = await callApi('POST', '/api/v1/trades', {
-        buyerId: 1, sellerId: 2, itemId: 1, price: 50000,
-        encryptedData: "...", encryptedSessionKey: "...", signature: "...", itemHash: "..."
-    });
+        buyerId: 1, sellerId: 2, itemId: 1, price: 50000 });
     currentTradeId = tradeRes.data.data.tradeId;
 
     // 2. 강제 결제 (검증 생략)
