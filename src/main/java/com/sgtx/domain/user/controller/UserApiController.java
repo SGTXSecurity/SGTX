@@ -4,10 +4,7 @@ import com.sgtx.domain.user.dto.PublicKeyResponse;
 import com.sgtx.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 //공개키 조회 (요청 / 응답)
 @RestController
@@ -24,5 +21,13 @@ public class UserApiController {
         return ResponseEntity.ok(
                 userService.getPublicKey(userId)
         );
+    }
+
+    @PostMapping("/{userId}/keys")
+    public ResponseEntity<String> generateKeys(
+            @PathVariable Long userId
+    ) {
+        userService.generateKeysIfAbsent(userId);
+        return ResponseEntity.ok("RSA 키 생성 완료");
     }
 }
