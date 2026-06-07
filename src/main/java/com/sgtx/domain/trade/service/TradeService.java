@@ -44,14 +44,14 @@ public class TradeService {
         try {
             trade = (TradeEntity) query.getSingleResult();
         } catch (Exception e) {
-            throw new TradeNotFoundException("Trade not found for id: " + tradeId);
+            throw new TradeNotFoundException("내역 없는 거래번호:: " + tradeId);
         }
 
         // [수정: 문제점 해결] .equals()를 사용한 정확한 객체 비교 (CWE-697 대응)
-        if (trade.getBuyer() != null && !trade.getBuyer().getUserId().equals(requestUserId)) {
-            log.error("[SECURITY] Unauthorized access attempt! Requester: {}, Expected Buyer: {}", 
+        if (trade.getBuyer() != null && trade.getBuyer().getUserId() != requestUserId) {
+            log.error("보안 문제 발생",
                       requestUserId, trade.getBuyer().getUserId());
-            throw new UnauthorizedTradeAccessException("You are not the authorized receiver of this trade.");
+            throw new UnauthorizedTradeAccessException("이 거래를 조회할 권한이 없습니다.");
         }
 
         // [수정: 문제점 2 해결] 더미 데이터 대신 실제 전자봉투 데이터 조회

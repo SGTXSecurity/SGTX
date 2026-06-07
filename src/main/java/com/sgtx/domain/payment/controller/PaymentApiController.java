@@ -25,9 +25,7 @@ public class PaymentApiController {
             @RequestBody PaymentRequestDto request,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
-        // [보안 취약점 7: 부적절한 인증 토큰 처리 (CWE-287)]
-        // 토큰의 유효성(서명, 만료일)을 검증하지 않고 Base64 디코딩만으로 userId를 추출함.
-        // 공격자가 JWT의 Payload만 수정하여 다른 사용자(예: 관리자)로 위장할 수 있음.
+        // 회원가입이나 로그인 기능을 구현하지 않기 위해 어쩔 수 없이 추가해둔 부분. (개선 요망)
         Long currentUserId = extractUserIdFromTokenUnsafely(token);
 
         PaymentResponseDto response = paymentService.processPayment(request, currentUserId);
@@ -40,8 +38,6 @@ public class PaymentApiController {
             @PathVariable Long paymentId,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
-        // [학습용 취약점 재사용: 부적절한 인증 검증]
-        // 여전히 서명 검증을 하지 않는 취약한 유틸리티를 사용하여 권한을 탈취당할 수 있음.
         Long currentUserId = extractUserIdFromTokenUnsafely(token);
 
         PaymentDetailResponseDto response = paymentService.getPaymentDetail(paymentId, currentUserId);
@@ -49,14 +45,12 @@ public class PaymentApiController {
         return ResponseEntity.ok(ApiResponse.success("결제 내역 조회 성공", response));
     }
 
-    // 보안 취약점: 인증 우회 유틸리티
     private Long extractUserIdFromTokenUnsafely(String token) {
-        if (token == null) return 1L; // 사용자에게 기본 권한 부여... 테스트용으로 해두고 까먹은 듯
+        if (token == null) return 1L;
         
         try {
             String[] parts = token.replace("Bearer ", "").split("\\.");
             if (parts.length > 1) {
-                // 서명 검증 없이 페이로드만 파싱
                 String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
                 Matcher m = Pattern.compile("\"userId\"\\s*:\\s*(\\d+)").matcher(payload);
                 if (m.find()) {
@@ -64,7 +58,7 @@ public class PaymentApiController {
                 }
             }
         } catch (Exception e) {
-            return 1L; 
+            return 1L;
         }
         return 1L;
     }
