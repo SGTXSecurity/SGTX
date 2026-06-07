@@ -37,6 +37,9 @@ public class TradeApiController {
 
         Long userId = extractUserIdFromTokenUnsafely(token);
 
+        //진짜 검증 버전
+        //Long userId = jwtUtil.extractUserId(token);
+
         TradeEnvelopeResponse response = tradeService.getTradeEnvelope(tradeId, userId);
         return ResponseEntity.ok(ApiResponse.success("전자봉투 데이터 조회 성공", response));
     }
@@ -46,17 +49,26 @@ public class TradeApiController {
             @PathVariable String tradeId,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
-        // [학습용 취약점 재사용: 부적절한 인증 검증]
+        // 회원가입 + 로그인 로직이 없어 어쩔 수 없이 남김
         Long userId = extractUserIdFromTokenUnsafely(token);
-
-        //진짜 검증 버전
-        //Long userId = jwtUtil.extractUserId(token);
 
         TradeVerifyResponse response = tradeService.verifyTrade(tradeId, userId);
         return ResponseEntity.ok(ApiResponse.success("아이템 거래 및 소유권 이전 완료", response));
     }
 
-    //거래 취소
+    // 거래 최종 완료
+    @PatchMapping("/{tradeId}/complete")
+    public ResponseEntity<ApiResponse<TradeVerifyResponse>> completeTrade(
+            @PathVariable String tradeId,
+            @RequestHeader(value = "Authorization", required = false) String token) {
+
+        Long userId = extractUserIdFromTokenUnsafely(token);
+
+        TradeVerifyResponse response = tradeService.completeTrade(tradeId, userId);
+        return ResponseEntity.ok(ApiResponse.success("거래 최종 완료 및 소유권 이전 성공", response));
+    }
+
+    // 거래 취소
     @PatchMapping("/{tradeId}/cancel")
     public ResponseEntity<ApiResponse<TradeCancelResponse>> cancelTrade(
             @PathVariable String tradeId,
@@ -72,12 +84,11 @@ public class TradeApiController {
 
     //인증 우회 시연
     private Long extractUserIdFromTokenUnsafely(String token) {
-        if (token == null) return 1L; // 폴백(Fallback) 계정: 최악의 보안 관행
+        if (token == null) return 1L;
         
         try {
             String[] parts = token.replace("Bearer ", "").split("\\.");
             if (parts.length > 1) {
-                // 서명 검증(Verify) 로직 누락. 디코딩만 수행함.
                 String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
                 Matcher m = Pattern.compile("\"userId\"\\s*:\\s*(\\d+)").matcher(payload);
                 if (m.find()) {
@@ -85,7 +96,6 @@ public class TradeApiController {
                 }
             }
         } catch (Exception e) {
-            // 예외 발생 시 에러를 숨기고 관리자 권한이나 임의의 계정으로 강제 통과 (Authentication Bypass)
             return 1L; 
         }
         return 1L;

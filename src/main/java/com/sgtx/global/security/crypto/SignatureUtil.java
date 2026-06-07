@@ -1,5 +1,6 @@
 package com.sgtx.global.security.crypto;
 
+import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.util.Base64;
@@ -20,9 +21,7 @@ public class SignatureUtil {
 
         // 개인키를 이용한 서명 모드
         signature.initSign(privateKey);
-
-        // 서명할 데이터(itemHash)
-        signature.update(itemHash.getBytes());
+        signature.update(itemHash.getBytes(StandardCharsets.UTF_8));
 
         // 전자서명 생성
         byte[] signedData = signature.sign();

@@ -11,6 +11,7 @@ import com.sgtx.domain.payment.repository.PaymentRepository;
 import com.sgtx.domain.trade.entity.TradeEntity;
 import com.sgtx.domain.trade.entity.TradeStatus;
 import com.sgtx.domain.trade.repository.TradeRepository;
+import com.sgtx.domain.trade.service.TradeService;
 import com.sgtx.global.exception.PaymentAmountMismatchException;
 import com.sgtx.global.exception.PaymentFailedException;
 import com.sgtx.global.exception.TradeNotFoundException;
@@ -45,8 +46,8 @@ public class PaymentService {
             throw new UnauthorizedTradeAccessException("해당 결제에 접근할 권한이 없습니다.");
         }
 
-        if (trade.getStatus() == TradeStatus.COMPLETED){
-            throw new IllegalStateException("이미 결제가 완료된 거래입니다.");
+        if (trade.getStatus() == TradeStatus.COMPLETED || trade.getStatus() == TradeStatus.PAID){
+            throw new IllegalStateException("이미 결제가 진행되었거나 완료된 거래입니다.");
         }
 
         if (trade.getStatus() != TradeStatus.VERIFIED) {
@@ -77,7 +78,7 @@ public class PaymentService {
         if (trade.getItem() != null) {
             trade.getItem().setOwner(trade.getBuyer());
         }
-        
+
         tradeRepository.save(trade);
 
         return PaymentResponseDto.builder()

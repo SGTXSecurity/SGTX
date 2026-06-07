@@ -3,330 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SGTX 게임 아이템 거래</title>
+    <title>SGTX 보안 아이템 거래소</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary-blue: #66c0f4;
-            --steam-dark: #171a21;
-            --steam-navy: #1b2838;
-            --steam-card: #22384a;
-            --dark-text: #c7d5e0;
-            --border-color: #2f536b;
+            --primary-blue: #0066cc;
+            --light-blue: #f0f7ff;
+            --bg-white: #ffffff;
+            --text-dark: #1a1a1a;
+            --text-gray: #6c757d;
+            --border-soft: #e9ecef;
         }
 
         body {
             background-color: #ffffff;
-            font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
-            color: var(--steam-dark);
+            font-family: 'Inter', -apple-system, 'Malgun Gothic', sans-serif;
+            color: var(--text-dark);
             line-height: 1.6;
         }
+
         .navbar { 
-            background-color: #ffffff; 
-            border-bottom: 2px solid var(--steam-dark);
-            padding: 1rem 0;
+            background-color: var(--bg-white); 
+            border-bottom: 1px solid var(--border-soft);
+            padding: 1.2rem 0;
         }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-blue) !important;
+            letter-spacing: -0.5px;
+        }
+
         .hero-section { 
-            background-color: var(--steam-dark);
-            color: #f5f5f5;
-            padding: 80px 0; 
-            border-radius: 0; 
-            margin-bottom: 4rem; 
+            padding: 100px 0 60px 0;
+            background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
         }
-        .container {
-            max-width: 1140px;
-        }
-        .item-card { 
-            border: 1px solid var(--border-color); 
-            border-radius: 12px; 
-            transition: all 0.3s ease; 
-            background: white; 
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .item-card:hover { 
-            border-color: var(--primary-blue);
-            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.2); 
-        }
-        .item-img { 
-            height: 180px; 
-            background-color: #f4f5f7; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 4.5rem; 
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-        }
-        .card-title {
-            font-size: 1.25rem;
+
+        .hero-title {
+            font-weight: 800;
+            font-size: 2.5rem;
             margin-bottom: 1rem;
         }
-        .price-tag { 
-            color: var(--primary-blue); 
-            font-weight: 700; 
-            font-size: 1.3rem; 
+
+        .container {
+            max-width: 1000px;
         }
-        .btn-primary {
-            background-color: var(--primary-blue);
-            border: none;
-            padding: 0.6rem 1.5rem;
-            font-weight: 600;
-        }
+
+        /* Ticker Style */
         .ticker-wrap {
+            width: 100%;
             overflow: hidden;
-            white-space: nowrap;
-            margin-top: 35px;
-            border-top: 1px solid rgba(102, 192, 244, 0.3);
-            border-bottom: 1px solid rgba(102, 192, 244, 0.3);
+            background-color: var(--light-blue);
             padding: 12px 0;
-            background: rgba(0, 0, 0, 0.25);
+            border-top: 1px solid var(--border-soft);
+            border-bottom: 1px solid var(--border-soft);
         }
 
         .ticker {
             display: inline-block;
-            color: #66c0f4;
-            font-weight: 700;
-            animation: ticker 22s linear infinite;
+            white-space: nowrap;
+            padding-right: 100%;
+            animation: ticker 30s linear infinite;
+            color: var(--primary-blue);
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
         }
 
         @keyframes ticker {
-            from { transform: translateX(100%); }
-            to { transform: translateX(-100%); }
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
         }
+
+        .item-card { 
+            border: 1px solid var(--border-soft); 
+            border-radius: 12px; 
+            background: var(--bg-white); 
+            padding: 2rem;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-card:hover {
+            border-color: var(--primary-blue);
+            box-shadow: 0 10px 30px rgba(0, 102, 204, 0.05);
+        }
+
+        .item-visual {
+            height: 160px;
+            background-color: var(--light-blue);
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-tag { 
+            color: var(--primary-blue); 
+            font-weight: 700; 
+            font-size: 1.4rem; 
+        }
+
+        .btn-primary {
+            background-color: var(--primary-blue);
+            border: none;
+            padding: 0.7rem 1.5rem;
+            font-weight: 600;
+            border-radius: 6px;
+        }
+
+        .section-title { 
+            font-weight: 700;
+            margin-bottom: 2.5rem;
+        }
+
         .hacker-mode-section { 
-            background-color: #f4f5f7; 
-            color: #444; 
+            background-color: #f8f9fa; 
             padding: 20px; 
             border-radius: 8px; 
             margin-top: 1.5rem; 
             display: none; 
-            border: 1px dashed #ccc;
+            border: 1px solid #dee2e6;
         }
+
+        .form-select, .form-control {
+            font-size: 0.9rem;
+            padding: 0.6rem;
+        }
+
         .modal-content {
             border-radius: 16px;
             border: none;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
         }
-        .modal-header {
-            padding: 2rem 2rem 1rem 2rem;
-        }
-        .modal-body {
-            padding: 1rem 2rem 2rem 2rem;
-        }
+
         .nav-pills .nav-link.active {
             background-color: var(--primary-blue);
         }
-        .nav-pills .nav-link {
-            color: var(--dark-text);
-            margin-right: 10px;
-        }
-        /* 여유 있는 간격을 위한 유틸리티 */
-        .section-title { margin-bottom: 2.5rem; font-weight: 700; }
+
+        .spacing-y { margin-bottom: 4rem; }
     </style>
 </head>
 <body>
 
-<!-- Navigation -->
 <nav class="navbar sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="#" style="color: var(--primary-blue);">
-            <i class="bi bi-shield-check"></i> SGTX 보안 아이템 거래
-        </a>
+        <a class="navbar-brand" href="#">SGTX SECURE MARKET</a>
 
-        <div class="d-flex align-items-center gap-4">
-            <div class="form-check form-switch">
+        <div class="d-flex align-items-center gap-3">
+            <div class="form-check form-switch me-2">
                 <input class="form-check-input" type="checkbox" id="hackerModeToggle" onchange="toggleHackerMode()">
-                <label class="form-check-label fw-bold" for="hackerModeToggle" style="font-size: 0.9rem;">
-                    개발자/해커 모드
-                </label>
+                <label class="form-check-label small fw-bold text-muted" for="hackerModeToggle">개발자 모드</label>
             </div>
 
-            <div class="d-flex align-items-center">
-                <span class="me-2 small fw-bold">역할:</span>
-                <select id="roleSelector"
-                        class="form-select form-select-sm"
-                        style="width: 140px; border-radius: 6px;"
-                        onchange="changeRoleView()">
-                    <option value="consumer">구매자</option>
-                    <option value="cardCompany">카드사</option>
-                    <option value="buyer">판매자</option>
-                </select>
-            </div>
+            <select id="userSelector" class="form-select form-select-sm" style="width: 160px;">
+                <option value="user1">사용자 A (구매자)</option>
+                <option value="user2">사용자 B (판매자)</option>
+                <option value="hacker">해커 (공격자)</option>
+            </select>
+
+            <select id="roleSelector" class="form-select form-select-sm" style="width: 130px;" onchange="changeRoleView()">
+                <option value="consumer">구매자 화면</option>
+                <option value="cardCompany">카드사 화면</option>
+                <option value="buyer">판매자 화면</option>
+            </select>
         </div>
     </div>
 </nav>
 
-<!-- Hero Section -->
 <div class="hero-section text-center">
     <div class="container">
-        <h1 class="display-5 fw-bold mb-3">1 : 1 아이템 거래 시스템</h1>
-        <p class="lead mb-0">SGTX SECURE MARKET</p>
+        <h1 class="hero-title"> 게임 아이템 거래</h1>
+        <p class="text-muted lead">AES-256 및 RSA 프로토콜을 통한 무결성 검증 시스템</p>
     </div>
 </div>
 
-<div class="ticker-wrap">
+<div class="ticker-wrap spacing-y">
     <div class="ticker">
-        🔒 AES-256 암호화 거래 지원
-        • 🛡️ RSA 전자봉투 적용
-        • ✅ SHA-256 무결성 검증
-        • 💳 카드 결제 지원
-        • 🎮 게임 아이템 안전 거래
-        • 🔒 AES-256 암호화 거래 지원
-        • 🛡️ RSA 전자봉투 적용
+        AES-256 CBC 암호화 거래 지원 • RSA 전자봉투 보안 적용 • SHA-256 데이터 무결성 실시간 검증 • 카드 결제 보안 모듈 탑재 • 게임 아이템 안전 거래 자동화 시스템 가동 중
     </div>
 </div>
 
-<!-- Main Content -->
 <div class="container">
-
-    <!-- 카드 등록/조회 영역 -->
-    <div class="card shadow-sm mb-4">
+    <div class="card border-0 shadow-sm spacing-y p-4" id="consumerCardSection" style="border-radius: 12px;">
         <div class="card-body">
-
-            <div id="consumerCardSection">
-                <h5>💳 카드 등록 (소비자)</h5>
-
-                <input id="cardUserId"
-                       class="form-control mb-2"
-                       placeholder="사용자 ID">
-
-                <input id="cardCompany"
-                       class="form-control mb-2"
-                       placeholder="카드사">
-
-                <input id="cardNumber"
-                       class="form-control mb-2"
-                       placeholder="카드번호">
-
-                <button class="btn btn-primary"
-                        onclick="registerCard()">
-                    카드 등록
-                </button>
+            <h6 class="fw-bold mb-4 text-uppercase tracking-wider">결제 수단 등록</h6>
+            <div class="row g-3">
+                <div class="col-md-3"><input id="cardUserId" class="form-control" placeholder="사용자 ID"></div>
+                <div class="col-md-3"><input id="cardCompany" class="form-control" placeholder="카드사"></div>
+                <div class="col-md-4"><input id="cardNumber" class="form-control" placeholder="카드 번호"></div>
+                <div class="col-md-2"><button class="btn btn-primary w-100" onclick="registerCard()">등록하기</button></div>
             </div>
-
-            <div id="cardCompanySection" style="display:none;">
-                <h5>🏦 카드 정보 조회 (카드사)</h5>
-
-                <input id="cardSearchUserId"
-                       class="form-control mb-2"
-                       placeholder="조회할 사용자 ID">
-
-                <button class="btn btn-success"
-                        onclick="getCompanyCards()">
-                    카드 조회
-                </button>
-            </div>
-
         </div>
     </div>
 
-    <div id="itemSection">
-    <h3 class="section-title">추천 아이템</h3>
-    <div class="row g-4">
-        <!-- Sample Item -->
-        <div class="col-md-6 col-lg-4" th:each="item : ${items}">
-            <div class="item-card">
-                <div class="item-img">🎮</div>
-                <div class="card-body p-0">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title mb-0 fw-bold" th:text="${item.itemName}">
-                            아이템명
-                        </h5>
-                        <span class="badge bg-primary rounded-pill">거래 가능</span>
-                    </div>
+    <div id="cardCompanySection" style="display:none;" class="spacing-y">
+        <div class="card border-0 shadow-sm p-4" style="border-radius: 12px;">
+            <div class="card-body">
+                <h6 class="fw-bold mb-4 text-uppercase">카드사 감사 패널</h6>
+                <div class="d-flex gap-2">
+                    <input id="cardSearchUserId" class="form-control w-25" placeholder="사용자 ID 조회">
+                    <button class="btn btn-primary" onclick="getCompanyCards()">감사 실행</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <p class="text-muted mb-4">
-                        전자봉투 기반 암호화 거래가 적용된 게임 아이템입니다.
-                    </p>
-
-                    <div class="d-flex justify-content-between align-items-center pt-2">
-                        <span class="price-tag">5,000 KRW</span>
-                        <button class="btn btn-primary rounded-pill px-4"
-                                th:attr="onclick=|startPurchaseFlow(${item.itemId}, 50000)|">
-                            보안 거래 시작
-                        </button>
-                    </div>
-
-                    <div class="hacker-mode-section mt-4">
-                        <p class="small fw-bold mb-2 text-uppercase text-danger">공격자 샌드박스</p>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-sm btn-outline-danger" onclick="forcePayment()">
-                                <i class="bi bi-lightning-fill"></i> 취약점 공격: 검증 우회 결제
+    <div id="itemSection" class="spacing-y">
+        <h4 class="section-title text-uppercase small tracking-widest text-muted">마켓플레이스</h4>
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4" th:each="item : ${items}">
+                <div class="item-card">
+                    <div class="item-visual"></div>
+                    <div class="card-body p-0 d-flex flex-column h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h5 class="card-title mb-0" th:text="${item.itemName}">아이템 이름</h5>
+                        </div>
+                        <p class="text-muted small mb-4">암호화 프로토콜로 보호되는 안전한 거래 자산입니다.</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <span class="price-tag">50,000 KRW</span>
+                            <button class="btn btn-primary btn-sm" th:attr="onclick=|startPurchaseFlow(${item.itemId}, 50000)|">
+                                거래 시작
                             </button>
-                            <button class="btn btn-sm btn-outline-dark" onclick="stealReceipt()">
-                                <i class="bi bi-incognito"></i> 취약점 공격: IDOR 영수증 탈취
-                            </button>
+                        </div>
+                        <div class="hacker-mode-section">
+                            <p class="small fw-bold text-danger mb-2">공격 샌드박스</p>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-sm btn-outline-danger" onclick="forcePayment()">검증 우회</button>
+                                <button class="btn btn-sm btn-outline-dark" onclick="stealReceipt()">IDOR 탈취</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-                    
-                    <!-- Malicious Actions -->
-                    <div class="hacker-mode-section mt-4">
-                        <p class="small fw-bold mb-2 text-uppercase text-danger">공격자 샌드박스</p>
-                        <div class="d-grid gap-2">
-                            <button class="btn btn-sm btn-outline-danger" onclick="forcePayment()">
-                                <i class="bi bi-lightning-fill"></i> 취약점 공격: 검증 우회 결제
-                            </button>
-                            <button class="btn btn-sm btn-outline-dark" onclick="stealReceipt()">
-                                <i class="bi bi-incognito"></i> 취약점 공격: IDOR 영수증 탈취
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- More items can be added here -->
     </div>
 </div>
 
-<!-- Educational Modal -->
 <div class="modal fade" id="eduModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 1.5rem;">
-            <div class="modal-header border-0 bg-light px-4 pt-4">
-                <h5 class="modal-title fw-bold" id="modalTitle">API 및 보안 인사이트</h5>
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="fw-bold" id="modalTitle">프로토콜 분석</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
-                <!-- Tabs -->
+            <div class="modal-body">
                 <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active rounded-pill px-4 fw-semibold" id="pills-user-tab" data-bs-toggle="pill" data-bs-target="#pills-user" type="button" role="tab">🎮 사용자 화면</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link rounded-pill px-4 fw-semibold" id="pills-api-tab" data-bs-toggle="pill" data-bs-target="#pills-api" type="button" role="tab">💻 API 인스펙터</button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link rounded-pill px-4 fw-semibold" id="pills-security-tab" data-bs-toggle="pill" data-bs-target="#pills-security" type="button" role="tab">🛡️ 보안 인사이트</button>
-                    </li>
+                    <li class="nav-item"><button class="nav-link active" id="pills-user-tab" data-bs-toggle="pill" data-bs-target="#pills-user" type="button">사용자 화면</button></li>
+                    <li class="nav-item"><button class="nav-link" id="pills-api-tab" data-bs-toggle="pill" data-bs-target="#pills-api" type="button">API 인스펙터</button></li>
+                    <li class="nav-item"><button class="nav-link" id="pills-security-tab" data-bs-toggle="pill" data-bs-target="#pills-security" type="button">보안 인사이트</button></li>
                 </ul>
-                <div class="tab-content" id="pills-tabContent">
-                    <!-- Tab 1: User Experience -->
-                    <div class="tab-pane fade show active" id="pills-user" role="tabpanel">
-                        <div id="userExperienceContent" class="text-center py-4">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-                    <!-- Tab 2: API Details -->
-                    <div class="tab-pane fade" id="pills-api" role="tabpanel">
-                        <div id="apiInspectorContent">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-                    <!-- Tab 3: Security Explanation -->
-                    <div class="tab-pane fade" id="pills-security" role="tabpanel">
-                        <div id="securityInsightContent">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="pills-user"><div id="userExperienceContent" class="text-center py-5"></div></div>
+                    <div class="tab-pane fade" id="pills-api"><div id="apiInspectorContent"></div></div>
+                    <div class="tab-pane fade" id="pills-security"><div id="securityInsightContent"></div></div>
                 </div>
-            </div>
-            <div class="modal-footer border-0 bg-light p-4" style="border-radius: 0 0 1.5rem 1.5rem;">
-                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">닫기</button>
             </div>
         </div>
     </div>
