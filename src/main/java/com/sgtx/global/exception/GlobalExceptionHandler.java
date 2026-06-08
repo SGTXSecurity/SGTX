@@ -58,8 +58,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleGeneralException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleGeneralException(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("내부 서버 에러: " + e.toString());
+                .body(new ErrorResponse(500, "내부 서버 에러: " + e.getMessage(), "SERVER_001"));
     }
 }

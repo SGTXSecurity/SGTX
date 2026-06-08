@@ -28,7 +28,7 @@ public class PaymentEntity {
     private Integer amount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, length = 20)
     private PaymentStatus paymentStatus;
 
     @Column(name = "approved_at")
