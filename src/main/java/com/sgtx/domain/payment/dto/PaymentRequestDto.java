@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 public class PaymentRequestDto {
     private Long tradeId;
     private Long cardId;
+    private String cardNumber; // 가상 카드사 전송을 위한 원본 카드 번호
     private Integer amount;
 }

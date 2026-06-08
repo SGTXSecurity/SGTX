@@ -16,11 +16,17 @@ import com.sgtx.global.exception.PaymentAmountMismatchException;
 import com.sgtx.global.exception.PaymentFailedException;
 import com.sgtx.global.exception.TradeNotFoundException;
 import com.sgtx.global.exception.UnauthorizedTradeAccessException;
+import com.sgtx.global.security.crypto.AesCryptoUtil;
+import com.sgtx.global.security.crypto.HashUtil;
+import com.sgtx.global.security.crypto.RsaCryptoUtil;
+import com.sgtx.global.security.crypto.keyPairUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.SecretKey;
+import java.security.KeyPair;
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -35,7 +41,7 @@ public class PaymentService {
     @Transactional (rollbackFor = Exception.class)
     public PaymentResponseDto processPayment(PaymentRequestDto request, Long currentUserId) {
 
-        log.info("결제중: tradeId={}, cardId={}, amount={}",
+        log.info("결제 프로세스 시작: tradeId={}, cardId={}, amount={}",
                 request.getTradeId(), request.getCardId(), request.getAmount());
 
         TradeEntity trade = tradeRepository.findByIdWithLock(request.getTradeId())
@@ -59,17 +65,39 @@ public class PaymentService {
             throw new PaymentAmountMismatchException("요청된 결제 금액(" + request.getAmount() + ")이 실제 거래 금액(" + trade.getPrice() + ")과 일치하지 않습니다.");
         }
 
-        // 가상의 카드사 API 호출 (성공 가정)
-        boolean isCardApproved = true; 
-        if (!isCardApproved) {
-            throw new PaymentFailedException("카드사 승인이 거절되었습니다. (사유: 한도 초과)", "PAY_002");
+        try {
+            String paymentData = String.format("cardId=%d|tradeId=%d|buyerId=%d|amount=%d",
+                    request.getCardId(), trade.getTradeId(), trade.getBuyer().getUserId(), request.getAmount());
+
+            SecretKey aesKey = AesCryptoUtil.generateAesKey();
+            String encryptedPaymentData = AesCryptoUtil.encrypt(paymentData, aesKey);
+
+            // 실제로는 카드사의 공개키를 미리 보유하고 있어야 함. 여기서는 임시 키 쌍 생성으로 대체.
+            KeyPair virtualCardCompanyKeys = keyPairUtil.generateKeyPair();
+            String encryptedAesKey = RsaCryptoUtil.encryptAesKey(aesKey, virtualCardCompanyKeys.getPublic());
+
+            log.info("[전자봉투 생성 완료]");
+            log.info(" - 암호화된 결제 데이터(Encrypted Data): {}", encryptedPaymentData);
+            log.info(" - 암호화된 세션키(Encrypted Session Key): {}", encryptedAesKey);
+            log.info(" -> 카드사로 암호화된 결제 데이터와 세션키를 전송합니다.");
+
+            // 가상의 카드사와 통신 (성공 가정)
+            boolean isCardApproved = true; 
+            if (!isCardApproved) {
+                throw new PaymentFailedException("카드사 승인이 거절되었습니다. (사유: 한도 초과)", "PAY_002");
+            }
+            log.info("카드사 승인 성공: 상태를 APPROVED로 변경합니다.");
+
+        } catch (Exception e) {
+            log.error("결제 보안 처리 중 오류 발생", e);
+            throw new PaymentFailedException("결제 보안 처리 중 오류가 발생했습니다.", "PAY_003");
         }
 
         PaymentEntity payment = new PaymentEntity();
         payment.setTradeId(trade.getTradeId());
         payment.setCardId(request.getCardId());
         payment.setAmount(request.getAmount());
-        payment.setPaymentStatus(PaymentStatus.SUCCESS);
+        payment.setPaymentStatus(PaymentStatus.APPROVED);
         payment.setApprovedAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
